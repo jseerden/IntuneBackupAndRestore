@@ -16,8 +16,8 @@ Install-Module -Name IntuneBackupAndRestore
 ```
 
 ## Prerequisites
-- Requires AzureAD Module (`Install-Module -Name AzureAD`)  
-- Requires [MSGraphFunctions](https://github.com/jseerden/MSGraphFunctions) PowerShell Module  
+- Requires AzureAD PowerShell Module (`Install-Module -Name AzureAD`)  
+- Requires [MSGraphFunctions](https://github.com/jseerden/MSGraphFunctions) PowerShell Module (`Install-Module -Name MSGraphFunctions`)
 - Connect to Microsoft Graph using the `Connect-Graph` PSCmdlet first.
 
 ## Features
