@@ -4,9 +4,9 @@ This PowerShell Module queries Microsoft Graph, and allows for cross-tenant Back
 Intune Configuration is backed up as (json) files in a given directory.
 
 ## Prerequisites
-Requires AzureAD Module (`Install-Module -Name AzureAD`)  
-Requires [MSGraphFunctions](https://github.com/jseerden/MSGraphFunctions) PowerShell Module  
-Connect to Microsoft Graph using the `Connect-Graph` PSCmdlet first.
+- Requires AzureAD Module (`Install-Module -Name AzureAD`)  
+- Requires [MSGraphFunctions](https://github.com/jseerden/MSGraphFunctions) PowerShell Module  
+- Connect to Microsoft Graph using the `Connect-Graph` PSCmdlet first.
 
 ## Features
 
@@ -36,42 +36,44 @@ Connect to Microsoft Graph using the `Connect-Graph` PSCmdlet first.
 
 ### Example 01 - Full Intune Backup
 ```powershell
-Start-BackupIntuneFull -Path C:\temp\IntuneBackup
+Start-IntuneBackup -Path C:\temp\IntuneBackup
 ```
 
-### Example 02 - Full Intune Restore (excluding Assignments)
+### Example 02 - Full Intune Restore
 ```powershell
-Start-RestoreIntuneConfig -Path C:\temp\IntuneBackup
+Start-IntuneRestoreConfig -Path C:\temp\IntuneBackup
+Start-IntuneRestoreAssignments -Path C:\temp\IntuneBackup
 ```
 
 ### Example 03 - Restore Intune Assignments 
 If configurations have been restored:
 ```powershell
-Start-RestoreIntuneConfig -Path C:\temp\IntuneBackup
+Start-IntuneRestoreAssignments -Path C:\temp\IntuneBackup
 ```
 
-If reassigning assignments to existing configurations. In this case the assignments match the configuration id to restore to.
+If reassigning assignments to existing (non-restored) configurations. In this case the assignments match the configuration id to restore to.  
+This allows for restoring if display names have changed.
 ```powershell
-Start-RestoreIntuneAssignments -Path C:\temp\IntuneBackup -RestoreById $true
+Start-IntuneRestoreAssignments -Path C:\temp\IntuneBackup -RestoreById $true
 ```
 
 ### Example 04 - Restore only Intune Compliance Policies
 
 ```powershell
-Invoke-RestoreDeviceCompliancePolicy -Path C:\temp\IntuneBackup
+Invoke-IntuneRestoreDeviceCompliancePolicy -Path C:\temp\IntuneBackup
 ```
 
 ```powershell
-Invoke-RestoreDeviceCompliancePolicyAssignments -Path C:\temp\IntuneBackup -RestoreById $false
+Invoke-IntuneRestoreDeviceCompliancePolicyAssignments -Path C:\temp\IntuneBackup
 ```
 
 ### Example 05 - Restore Only Intune Device Configurations
 ```powershell
-Invoke-RestoreDeviceConfiguration -Path C:\temp\IntuneBackup
+Invoke-IntuneRestoreDeviceConfiguration -Path C:\temp\IntuneBackup
 ```
 
 ```powershell
-Invoke-RestoreDeviceConfigurationAssignments -Path C:\temp\IntuneBackup -RestoreById $false
+Invoke-IntuneRestoreDeviceConfigurationAssignments -Path C:\temp\IntuneBackup
 ```
 
 ## Known Issues
