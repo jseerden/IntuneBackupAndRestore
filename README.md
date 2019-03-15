@@ -8,6 +8,13 @@ This PowerShell Module queries Microsoft Graph, and allows for cross-tenant Back
 
 Intune Configuration is backed up as (json) files in a given directory.
 
+## Installing IntuneBackupAndRestore
+
+```powershell
+# Install IntuneBackupAndRestore from the PowerShell Gallery
+Install-Module -Name IntuneBackupAndRestore
+```
+
 ## Prerequisites
 - Requires AzureAD Module (`Install-Module -Name AzureAD`)  
 - Requires [MSGraphFunctions](https://github.com/jseerden/MSGraphFunctions) PowerShell Module  
