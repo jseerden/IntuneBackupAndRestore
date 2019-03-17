@@ -88,6 +88,12 @@ Invoke-IntuneRestoreDeviceConfiguration -Path C:\temp\IntuneBackup
 Invoke-IntuneRestoreDeviceConfigurationAssignments -Path C:\temp\IntuneBackup
 ```
 
+### Example 06 - Compare two Backup Files for changes
+```powershell
+# The DifferenceFilePath should point to the latest Intune Backup file, as it might contain new properties.
+Compare-IntuneBackupFile -ReferenceFilePath 'C:\temp\IntuneBackup\Device Configurations\Windows - Endpoint Protection.json' -DifferenceFilePath 'C:\temp\IntuneBackupLatest\Device Configurations\Windows - Endpoint Protection.json'
+```
+
 ## Known Issues
 - Does not support backing up Intune configuration items with duplicate Display Names. Files may be overwritten.
 - Unable to restore Client App Assignments for Windows Line-of-Business Apps (MSI)
