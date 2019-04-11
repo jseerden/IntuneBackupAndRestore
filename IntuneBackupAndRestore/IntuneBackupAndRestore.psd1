@@ -12,7 +12,7 @@
 RootModule = 'IntuneBackupAndRestore.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.0'
+ModuleVersion = '1.2.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -51,7 +51,7 @@ Description = 'PowerShell Module that queries Microsoft Graph, and allows for cr
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @()
+# RequiredModules = @(@{ModuleName="MSGraphFunctions", ModuleVersion="2.2.0", Guid="0a3f3df4-64a0-430a-937d-a9b1901349ce"})
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
