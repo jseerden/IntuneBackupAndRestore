@@ -101,13 +101,13 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
             else {
                 $deviceCompliancePolicyObject = Get-GraphDeviceCompliancePolicy | Where-Object displayName -eq "$($deviceCompliancePolicy.BaseName)"
                 if (-not ($deviceCompliancePolicyObject)) {
-                    Write-Warning "Error retrieving Intune Complaince Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
+                    Write-Warning "Error retrieving Intune Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
                     continue
                 }
             }
         }
         catch {
-            Write-Output "Error retrieving Intune Device Complaince Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
+            Write-Output "Error retrieving Intune Device Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -115,10 +115,10 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         # Restore the assignments
         try {
             $null = New-GraphDeviceCompliancePolicyAssignment -Id $deviceCompliancePolicyObject.id -RequestBody $requestBody -ErrorAction Stop
-            Write-Output "$($deviceCompliancePolicyObject.displayName) - Succesfully restored Device Complaince Policy Assignment(s)"
+            Write-Output "$($deviceCompliancePolicyObject.displayName) - Succesfully restored Device Compliance Policy Assignment(s)"
         }
         catch {
-            Write-Output "$($deviceCompliancePolicyObject.displayName) - Failed to restore Device Complaince Policy Assignment(s)"
+            Write-Output "$($deviceCompliancePolicyObject.displayName) - Failed to restore Device Compliance Policy Assignment(s)"
             Write-Error $_ -ErrorAction Continue
         }
     }

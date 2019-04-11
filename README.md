@@ -23,6 +23,8 @@ Install-Module -Name IntuneBackupAndRestore
 ## Features
 
 ### Backup actions
+- Administrative Templates (Device Configurations)
+- Administrative Template Assignments
 - Client App Assignments
 - Device Compliance Policies
 - Device Compliance Policy Assignments
@@ -34,6 +36,8 @@ Install-Module -Name IntuneBackupAndRestore
 - Software Update Ring Assignments
 
 ### Restore actions
+- Administrative Templates (Device Configurations)
+- Administrative Template Assignments
 - Client App Assignments
 - Device Compliance Policies
 - Device Compliance Policy Assignments
@@ -97,3 +101,4 @@ Compare-IntuneBackupFile -ReferenceFilePath 'C:\temp\IntuneBackup\Device Configu
 ## Known Issues
 - Does not support backing up Intune configuration items with duplicate Display Names. Files may be overwritten.
 - Unable to restore Client App Assignments for Windows Line-of-Business Apps (MSI)
+- Intune Configurations that contain Display Names that include any of the following characters: `\/:*?"<>|` may generate errors during back-up.
