@@ -36,18 +36,20 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
             $groupPolicyDefinition = Get-GraphGroupPolicyDefinition -GroupPolicyConfigurationId $groupPolicyConfiguration.id -GroupPolicyDefinitionValueId $groupPolicyDefinitionValue.id
             $groupPolicyPresentationValues = (Get-GraphGroupPolicyPresentationValue -GroupPolicyConfigurationId $groupPolicyConfiguration.id -GroupPolicyDefinitionValueId $groupPolicyDefinitionValue.id).Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
             $groupPolicyBackupValue = @{
-                "enabled" = $true
+                "enabled" = $groupPolicyDefinitionValue.enabled
                 "definition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"
             }
 
             if ($groupPolicyPresentationValues.value) {
-                $groupPolicyBackupValue."presentationValues" = @(
-                    @{
-                        "@odata.type" = $groupPolicyPresentationValues.'@odata.type'
-                        "value" = $groupPolicyPresentationValues.value
-                        "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValues.presentation.id)')"
-                    }
-                )
+                $groupPolicyBackupValue."presentationValues" = @()
+                foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues) {
+                    $groupPolicyBackupValue."presentationValues" +=
+                        @{
+                            "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
+                            "value" = $groupPolicyPresentationValue.value
+                            "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                        }
+                }
             } elseif ($groupPolicyPresentationValues.values) {
                 $groupPolicyBackupValue."presentationValues" = @(
                     @{
