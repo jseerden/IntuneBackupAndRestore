@@ -29,6 +29,7 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
 
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         Write-Output "Backing Up - Device Compliance Policy: $($deviceCompliancePolicy.displayName)"
-        $deviceCompliancePolicy | ConvertTo-Json | Out-File -FilePath "$path\Device Compliance Policies\$($deviceCompliancePolicy.displayName).json"
+        $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $deviceCompliancePolicy | ConvertTo-Json | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
     }
 }

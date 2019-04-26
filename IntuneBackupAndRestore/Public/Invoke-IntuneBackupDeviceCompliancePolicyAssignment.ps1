@@ -32,7 +32,7 @@ function Invoke-IntuneBackupDeviceCompliancePolicyAssignment {
         if ($assignments) {
             Write-Output "Backing Up - Device Compliance Policy - Assignments: $($deviceCompliancePolicy.displayName)"
             $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -FilePath "$path\Device Compliance Policies\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Compliance Policies\Assignments\$fileName.json"
         }
     }
 }

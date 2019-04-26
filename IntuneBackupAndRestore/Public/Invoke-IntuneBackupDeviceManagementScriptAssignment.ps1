@@ -32,7 +32,7 @@ function Invoke-IntuneBackupDeviceManagementScriptAssignment {
         if ($assignments) {
             Write-Output "Backing Up - Device Management Script - Assignments: $($deviceManagementScript.displayName)"
             $fileName = ($deviceManagementScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -FilePath "$path\Device Management Scripts\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\Assignments\$fileName.json"
         }
     }
 }

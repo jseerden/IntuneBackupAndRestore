@@ -31,7 +31,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
     # Get all policies with assignments
     $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments"
     foreach ($deviceConfiguration in $deviceConfigurations) {
-        $deviceConfigurationAssignments = Get-Content -Path $deviceConfiguration.FullName | ConvertFrom-Json
+        $deviceConfigurationAssignments = Get-Content -LiteralPath $deviceConfiguration.FullName | ConvertFrom-Json
         $deviceConfigurationId = ($deviceConfigurationAssignments[0]).id.Split("_")[0]
 
         # Create the base requestBody
@@ -121,7 +121,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         # Restore the assignments
         try {
             $null = New-GraphDeviceConfigurationAssignment -Id $deviceConfigurationObject.id -RequestBody $requestBody -ErrorAction Stop
-            Write-Output "$($deviceConfigurationObject.displayName) - Succesfully restored Device Configuration Assignment(s)"
+            Write-Output "$($deviceConfigurationObject.displayName) - Successfully restored Device Configuration Assignment(s)"
         }
         catch {
             Write-Output "$($deviceConfigurationObject.displayName) - Failed to restore Device Configuration Assignment(s)"

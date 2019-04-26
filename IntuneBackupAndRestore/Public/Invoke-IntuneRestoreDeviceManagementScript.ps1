@@ -22,15 +22,16 @@ function Invoke-IntuneRestoreDeviceManagementScript {
     # Get all device management scripts
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File
     foreach ($deviceManagementScript in $deviceManagementScripts) {
-        $deviceManagementScriptContent = Get-Content -Path $deviceManagementScript.FullName -Raw
+        $deviceManagementScriptContent = Get-Content -LiteralPath $deviceManagementScript.FullName -Raw
+        $deviceManagementScriptDisplayName = ($deviceManagementScriptContent | ConvertFrom-Json).displayName        
 
         # Restore the device management script
         try {
             $null = New-GraphDeviceManagementScript -RequestBody $deviceManagementScriptContent -ErrorAction Stop
-            Write-Output "$($deviceManagementScript.BaseName) - Succesfully restored Device Management Script"
+            Write-Output "$deviceManagementScriptDisplayName - Successfully restored Device Management Script"
         }
         catch {
-            Write-Output "$($deviceManagementScript.BaseName) - Failed to restore Device Management Script"
+            Write-Output "$deviceManagementScriptDisplayName - Failed to restore Device Management Script"
             Write-Error $_ -ErrorAction Continue
         }
     }

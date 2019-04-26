@@ -31,7 +31,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
     # Get all policies with assignments
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments"
     foreach ($deviceManagementScript in $deviceManagementScripts) {
-        $deviceManagementScriptAssignments = Get-Content -Path $deviceManagementScript.FullName | ConvertFrom-Json
+        $deviceManagementScriptAssignments = Get-Content -LiteralPath $deviceManagementScript.FullName | ConvertFrom-Json
         $deviceManagementScriptId = ($deviceManagementScriptAssignments[0]).id.Split(":")[0]
 
         # Create the base requestBody
@@ -118,7 +118,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         # Restore the assignments
         try {
             $null = New-GraphDeviceManagementScriptAssignment -Id $deviceManagementScriptObject.id -RequestBody $requestBody -ErrorAction Stop
-            Write-Output "$($deviceManagementScriptObject.displayName) - Succesfully restored Device Management Script Assignment(s)"
+            Write-Output "$($deviceManagementScriptObject.displayName) - Successfully restored Device Management Script Assignment(s)"
         }
         catch {
             Write-Output "$($deviceManagementScriptObject.displayName) - Failed to restore Device Management Script Assignment(s)"

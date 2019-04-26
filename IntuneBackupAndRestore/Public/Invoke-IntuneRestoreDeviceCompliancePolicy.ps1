@@ -22,15 +22,16 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
     # Get all Device Compliance Policies
     $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $deviceCompliancePolicyContent = Get-Content -Path $deviceCompliancePolicy.FullName -Raw
+        $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName -Raw
+        $deviceCompliancePolicyDisplayName = ($deviceCompliancePolicyContent | ConvertFrom-Json).displayName
 
         # Restore the Device Compliance Policy
         try {
             $null = New-GraphDeviceCompliancePolicy -RequestBody $deviceCompliancePolicyContent -ErrorAction Stop
-            Write-Output "$($deviceCompliancePolicy.BaseName) - Succesfully restored Device Compliance Policy"
+            Write-Output "$deviceCompliancePolicyDisplayName - Successfully restored Device Compliance Policy"
         }
         catch {
-            Write-Output "$($deviceCompliancePolicy.BaseName) - Failed to restore Device Compliance Policy"
+            Write-Output "$deviceCompliancePolicyDisplayName - Failed to restore Device Compliance Policy"
             Write-Error $_ -ErrorAction Continue
         }
     }

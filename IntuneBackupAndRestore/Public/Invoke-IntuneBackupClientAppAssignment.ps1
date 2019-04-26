@@ -32,7 +32,7 @@ function Invoke-IntuneBackupClientAppAssignment {
         if ($assignments) {
             Write-Output "Backing Up - Client App - Assignments: $($clientApp.displayName)"
             $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -FilePath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
         }
     }
 }
