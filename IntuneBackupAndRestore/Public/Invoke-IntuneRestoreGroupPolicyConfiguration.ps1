@@ -22,7 +22,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
     # Get all Group Policy Configurations
     $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $groupPolicyConfigurationContent = Get-Content -Path $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json
+        $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json     
 
         # Restore the Group Policy Configuration
         try {
@@ -31,12 +31,12 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
             }
 
             $groupPolicyConfigurationObject = New-GraphGroupPolicyConfiguration -RequestBody ($groupPolicyConfigurationRequestBody | ConvertTo-Json) -ErrorAction Stop
-            Write-Output "$($groupPolicyConfiguration.BaseName) - Succesfully restored base Group Policy Configuration"
+            Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored base Group Policy Configuration"
 
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
                 $groupPolicyDefinitionValue = New-GraphGroupPolicyDefinitionValue -Id $groupPolicyConfigurationObject.id -RequestBody ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 5) -ErrorAction Stop
                 $groupPolicyDefinition = Get-GraphGroupPolicyDefinition -GroupPolicyConfigurationId $groupPolicyConfigurationObject.id -GroupPolicyDefinitionValueId $groupPolicyDefinitionValue.id
-                Write-Output "$($groupPolicyConfiguration.BaseName) - Succesfully restored '$($groupPolicyDefinition.displayName)' Setting for Group Policy Configuration"
+                Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored '$($groupPolicyDefinition.displayName)' Setting for Group Policy Configuration"
             }
         }
         catch {

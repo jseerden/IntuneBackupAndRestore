@@ -29,7 +29,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
     # Get all policies with assignments
     $clientApps = Get-ChildItem -Path "$Path\Client Apps\Assignments"
     foreach ($clientApp in $clientApps) {
-        $clientAppAssignments = Get-Content -Path $clientApp.FullName -Raw
+        $clientAppAssignments = Get-Content -LiteralPath $clientApp.FullName -Raw
         $clientAppId = ($clientApp.BaseName -split " - ")[0]
         $clientAppName = ($clientApp.BaseName -split " - ")[1]
 
@@ -55,7 +55,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
         # Restore the assignments
         try {
             $null = New-GraphClientAppAssignment -Id $clientAppObject.id -RequestBody $clientAppAssignments -ErrorAction Stop
-            Write-Output "$($clientAppObject.displayName) - Succesfully restored Client App Assignment(s)"
+            Write-Output "$($clientAppObject.displayName) - Successfully restored Client App Assignment(s)"
         }
         catch {
             if ($_.Exception.Message -match "The MobileApp Assignment already exist") {

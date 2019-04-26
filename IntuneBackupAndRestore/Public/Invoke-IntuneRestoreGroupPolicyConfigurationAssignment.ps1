@@ -31,7 +31,7 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
     # Get all policies with assignments
     $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates\Assignments"
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $groupPolicyConfigurationAssignments = Get-Content -Path $groupPolicyConfiguration.FullName | ConvertFrom-Json
+        $groupPolicyConfigurationAssignments = Get-Content -LiteralPath $groupPolicyConfiguration.FullName | ConvertFrom-Json
         $groupPolicyConfigurationId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[0]
 
         # Create the base requestBody
@@ -115,7 +115,7 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         # Restore the assignments
         try {
             $null = New-GraphGroupPolicyConfigurationAssignment -Id $groupPolicyConfigurationObject.id -RequestBody $requestBody -ErrorAction Stop
-            Write-Output "$($groupPolicyConfigurationObject.displayName) - Succesfully restored Administrative Template Assignment(s)"
+            Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored Administrative Template Assignment(s)"
         }
         catch {
             Write-Output "$($groupPolicyConfigurationObject.displayName) - Failed to restore Administrative Template Assignment(s)"

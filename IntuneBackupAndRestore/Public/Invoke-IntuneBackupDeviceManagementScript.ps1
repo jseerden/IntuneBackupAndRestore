@@ -30,10 +30,11 @@ function Invoke-IntuneBackupDeviceManagementScript {
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         Write-Output "Backing Up - Device Management Script: $($deviceManagementScript.displayName)"
         # ScriptContent returns null, so we have to query Microsoft Graph for each script
-        $deviceManagementScriptObject = Get-GraphDeviceManagementScript -Id $deviceManagementScript.Id 
-        $deviceManagementScriptObject | ConvertTo-Json | Out-File -FilePath "$path\Device Management Scripts\$($deviceManagementScript.displayName).json"
+        $deviceManagementScriptObject = Get-GraphDeviceManagementScript -Id $deviceManagementScript.Id
+        $deviceManagementScriptFileName = ($deviceManagementScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $deviceManagementScriptObject | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\$deviceManagementScriptFileName.json"
 
         $deviceManagementScriptContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($deviceManagementScriptObject.scriptContent))
-        $deviceManagementScriptContent | Out-File -FilePath "$path\Device Management Scripts\Script Content\$($deviceManagementScript.displayName).ps1"
+        $deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$($deviceManagementScriptFileName.displayName).ps1"
     }
 }

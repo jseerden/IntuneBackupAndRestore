@@ -31,7 +31,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
     # Get all policies with assignments
     $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\Assignments"
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $deviceCompliancePolicyAssignments = Get-Content -Path $deviceCompliancePolicy.FullName | ConvertFrom-Json
+        $deviceCompliancePolicyAssignments = Get-Content -LiteralPath $deviceCompliancePolicy.FullName | ConvertFrom-Json
         $deviceCompliancePolicyId = ($deviceCompliancePolicyAssignments[0]).id.Split("_")[0]
 
         # Create the base requestBody
@@ -115,7 +115,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         # Restore the assignments
         try {
             $null = New-GraphDeviceCompliancePolicyAssignment -Id $deviceCompliancePolicyObject.id -RequestBody $requestBody -ErrorAction Stop
-            Write-Output "$($deviceCompliancePolicyObject.displayName) - Succesfully restored Device Compliance Policy Assignment(s)"
+            Write-Output "$($deviceCompliancePolicyObject.displayName) - Successfully restored Device Compliance Policy Assignment(s)"
         }
         catch {
             Write-Output "$($deviceCompliancePolicyObject.displayName) - Failed to restore Device Compliance Policy Assignment(s)"

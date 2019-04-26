@@ -32,7 +32,7 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
         if ($assignments) {
             Write-Output "Backing Up - Device Configuration - Assignments: $($deviceConfiguration.displayName)"
             $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -FilePath "$path\Device Configurations\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Configurations\Assignments\$fileName.json"
         }
     }
 }

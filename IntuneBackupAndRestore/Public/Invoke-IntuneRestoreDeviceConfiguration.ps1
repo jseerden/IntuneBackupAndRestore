@@ -22,15 +22,16 @@ function Invoke-IntuneRestoreDeviceConfiguration {
     # Get all device configurations
     $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations" -File
     foreach ($deviceConfiguration in $deviceConfigurations) {
-        $deviceConfigurationContent = Get-Content -Path $deviceConfiguration.FullName -Raw
+        $deviceConfigurationContent = Get-Content -LiteralPath $deviceConfiguration.FullName -Raw
+        $deviceConfigurationDisplayName = ($deviceConfigurationContent | ConvertFrom-Json).displayName
 
         # Restore the device configuration
         try {
             $null = New-GraphDeviceConfiguration -RequestBody $deviceConfigurationContent -ErrorAction Stop
-            Write-Output "$($deviceConfiguration.BaseName) - Succesfully restored Device Configuration"
+            Write-Output "$deviceConfigurationDisplayName - Successfully restored Device Configuration"
         }
         catch {
-            Write-Output "$($deviceConfiguration.BaseName) - Failed to restore Device Configuration"
+            Write-Output "$deviceConfigurationDisplayName - Failed to restore Device Configuration"
             Write-Error $_ -ErrorAction Continue
         }
     }

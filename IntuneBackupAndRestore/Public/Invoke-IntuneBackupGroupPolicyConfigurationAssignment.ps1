@@ -32,7 +32,7 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
         if ($assignments) {
             Write-Output "Backing Up - Administrative Templates - Assignments: $($groupPolicyConfiguration.displayName)"
             $fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -FilePath "$path\Administrative Templates\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Administrative Templates\Assignments\$fileName.json"
         }
     }
 }
