@@ -35,6 +35,6 @@ function Invoke-IntuneBackupDeviceManagementScript {
         $deviceManagementScriptObject | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\$deviceManagementScriptFileName.json"
 
         $deviceManagementScriptContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($deviceManagementScriptObject.scriptContent))
-        $deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$($deviceManagementScriptFileName.displayName).ps1"
+        $deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$deviceManagementScriptFileName.ps1"
     }
 }
