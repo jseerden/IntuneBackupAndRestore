@@ -25,6 +25,7 @@ Install-Module -Name IntuneBackupAndRestore
 ### Backup actions
 - Administrative Templates (Device Configurations)
 - Administrative Template Assignments
+- Client Apps
 - Client App Assignments
 - Device Compliance Policies
 - Device Compliance Policy Assignments
@@ -47,6 +48,8 @@ Install-Module -Name IntuneBackupAndRestore
 - Device Management Script Assignments
 - Software Update Rings
 - Software Update Ring Assignments
+
+> Please note that some Client App settings can be backed up, for instance the retrieval of Win32 (un)install cmdlets, requirements, etcetera. The Client App itself is not backed up and this module does not support restoring Client Apps at this time.
 
 ## Examples
 

@@ -24,6 +24,7 @@ function Start-IntuneBackup() {
         [string]$Path
     )
 
+    Invoke-IntuneBackupClientApp -Path $Path
     Invoke-IntuneBackupClientAppAssignment -Path $Path
     Invoke-IntuneBackupDeviceCompliancePolicy -Path $Path
     Invoke-IntuneBackupDeviceCompliancePolicyAssignment -Path $Path
