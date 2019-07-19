@@ -32,6 +32,7 @@ function Invoke-IntuneBackupClientApp {
         $clientAppType = $clientApp.'@odata.type'.split('.')[-1]
 
         $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $clientApp | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
+        $clientAppDetails = Get-GraphClientApp -id $clientApp.id
+        $clientAppDetails | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
     }
 }
