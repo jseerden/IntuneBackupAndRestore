@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2019-12-22
+- Added `Compare-IntuneBackupDirectories` to compare backup files from two backup sets. Co-authored-by: [Bradley Wyatt](https://github.com/bwya77)
+- Fixed an issue with `Compare-IntuneBackupFile`, which would ignore JSON files that had no depth.
+
 ## [1.4.2] - 2019-07-19
 - Update `Invoke-IntuneBackupClientApp` to include details such as detection rules, requirement rules and return codes.
 
