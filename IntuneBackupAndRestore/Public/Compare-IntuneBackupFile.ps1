@@ -81,18 +81,30 @@ function Compare-IntuneBackupFile() {
     $flattenBackupArray = Invoke-FlattenBackupObject -PSCustomObject $backupFile
     $flattenLatestBackupArray  = Invoke-FlattenBackupObject -PSCustomObject $latestBackupFile
 
-    $flattenBackupObject = New-Object -TypeName PSObject
-    for ($i=0; $i -le $flattenBackupArray.Length; $i++) {
-        foreach ($property in $flattenBackupArray[$i].PSObject.Properties) {
-            $flattenBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+    # Check if the JSON needs flattening, else it's just an object instead of an array.
+    if ($flattenBackupArray -is [array]) {    
+        $flattenBackupObject = New-Object -TypeName PSObject
+        for ($i=0; $i -le $flattenBackupArray.Length; $i++) {
+            foreach ($property in $flattenBackupArray[$i].PSObject.Properties) {
+                $flattenBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+            }
         }
     }
+    else {
+        $flattenBackupObject = $flattenBackupArray
+    }
 
-    $flattenLatestBackupObject = New-Object -TypeName PSObject
-    for ($i=0; $i -le $flattenLatestBackupArray.Length; $i++) {
-        foreach ($property in $flattenLatestBackupArray[$i].PSObject.Properties) {
-            $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+    # Check if the JSON needs flattening, else it's just an object instead of an array.
+    if ($flattenLatestBackupArray -is [array]) {
+        $flattenLatestBackupObject = New-Object -TypeName PSObject
+        for ($i=0; $i -le $flattenLatestBackupArray.Length; $i++) {
+            foreach ($property in $flattenLatestBackupArray[$i].PSObject.Properties) {
+                $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+            }
         }
+    }
+    else {
+        $flattenLatestBackupObject = $flattenLatestBackupArray
     }
 
     $backupComparison = foreach ($latestBackupFileProperty in $flattenBackupObject.PSObject.Properties.Name) {
