@@ -1,5 +1,4 @@
-﻿Function Compare-IntuneBackupDirectories
-{
+﻿function Compare-IntuneBackupDirectories() {
 	<#
     .SYNOPSIS
     Compare two Intune Backup Directories for changes in each of their JSON backup files.
@@ -26,48 +25,44 @@
 	Bradley Wyatt - The Lazy Administrator
     #>
 	
-	Param (
+	param (
 		[parameter(Mandatory = $true, Position = 0)]
 		[String]$ReferenceDirectory,
 		[parameter(Mandatory = $true, Position = 1)]
 		[String]$DifferenceDirectory
-		
 	)
-	Begin
-	{
-		$ReferenceFiles = Get-ChildItem $ReferenceDirectory -Recurse | Where-Object { $_.Name -like "*.json*" } | Select-Object -ExpandProperty VersionInfo
+
+	begin {
+		$referenceFiles = Get-ChildItem $ReferenceDirectory -Recurse | Where-Object { $_.Name -like "*.json*" } | Select-Object -ExpandProperty VersionInfo
 		
-		$DifferenceFiles = Get-ChildItem $DifferenceDirectory -Recurse | Where-Object { $_.Name -like "*.json*" } | Select-Object @{ Label = "FileName"; Expression = { (($_.VersionInfo).FileName).split("\") | Select-Object -Last 1 } }, @{ Label = "FullPath"; Expression = { (($_.VersionInfo).FileName) } }
+		$differenceFiles = Get-ChildItem $DifferenceDirectory -Recurse | Where-Object { $_.Name -like "*.json*" } | Select-Object @{ Label = "FileName"; Expression = { (($_.VersionInfo).FileName).split("\") | Select-Object -Last 1 } }, @{ Label = "FullPath"; Expression = { (($_.VersionInfo).FileName) } }
 	}
-	Process
-	{
-		Foreach ($File in $ReferenceFiles)
-		{
-			$ReferenceJSONFile = ($File.Filename).split("\") | Select-Object -last 1
+
+	process	{
+		foreach ($file in $referenceFiles) {
+			$referenceJSONFile = ($file.Filename).split("\") | Select-Object -last 1
 			
-			Write-Verbose "The reference file is '$ReferenceJSONFile'"
-			Write-Verbose "The reference file path is $($File.FileName)"
+			Write-Verbose "The reference file is '$referenceJSONFile'"
+			Write-Verbose "The reference file path is $($file.FileName)"
 			
-			$DifFileFound = $DifferenceFiles | Where-Object { $_.FileName -eq $ReferenceJSONFile }
+			$difFileFound = $differenceFiles | Where-Object { $_.FileName -eq $referenceJSONFile }
 			
-			If (($DifFileFound.FileName).count -gt 1)
-			{
-				$ReferenceJSONFile = ($File.Filename).split("\") | Select-Object -last 2
-				$ReferenceJSONFileParent = ($File.FileName).split("\") | Select-Object -Last 2
-				$ReferenceJSONFileParentPath = "$(($ReferenceJSONFileParent).item(0))\$(($ReferenceJSONFileParent).item(1))"
+			if (($difFileFound.FileName).count -gt 1) {
+				$referenceJSONFile = ($file.Filename).split("\") | Select-Object -last 2
+				$referenceJSONFileParent = ($file.FileName).split("\") | Select-Object -Last 2
+				$referenceJSONFileParentPath = "$(($referenceJSONFileParent).item(0))\$(($referenceJSONFileParent).item(1))"
 				Write-Verbose "Multiple difference files found that were matching the reference file"
-				$DifFileFound = $DifferenceFiles | Where-Object { $_.FullPath -like "*$ReferenceJSONFileParentPath*" }
+				$difFileFound = $differenceFiles | Where-Object { $_.FullPath -like "*$referenceJSONFileParentPath*" }
 			}
 			
-			Write-Verbose "The difference file is located at $($DifFileFound.fullpath)"
+			Write-Verbose "The difference file is located at $($difFileFound.fullpath)"
 			
-			Write-Verbose "Checking for changes in the file '$ReferenceJSONFile'"
+			Write-Verbose "Checking for changes in the file '$referenceJSONFile'"
 			
-			$Changes = Compare-IntuneBackupFile -ReferenceFilePath $File.FileName -DifferenceFilePath $DifFileFound.FullPath -ErrorAction silentlycontinue
-			If ($Changes)
-			{
-				Write-Host "There was a change in the file, '$ReferenceJSONFile' which is located at $($DifFileFound.fullpath)"
-				$Changes | Format-Table -AutoSize
+			$changes = Compare-IntuneBackupFile -ReferenceFilePath $file.FileName -DifferenceFilePath $difFileFound.FullPath -ErrorAction silentlycontinue
+			if ($changes) {
+				Write-Host "There was a change in the file, '$referenceJSONFile' which is located at $($difFileFound.fullpath)"
+				$changes | Format-Table -AutoSize
 			}
 		}
 	}
