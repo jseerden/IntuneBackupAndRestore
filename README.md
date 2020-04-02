@@ -35,6 +35,18 @@ Install-Module -Name IntuneBackupAndRestore
 - Device Management Script Assignments
 - Software Update Rings
 - Software Update Ring Assignments
+- Endpoint Security Configurations
+  - Security Baselines
+    - Windows 10 Security Baselines
+    - Microsoft Defender ATP Baselines
+    - Microsoft Edge Baseline
+  - Antivirus
+  - Disk encryption
+  - Firewall
+  - Endpoint detection and response
+  - Attack surface reduction
+  - Account protection
+  - Device compliance
 
 ### Restore actions
 - Administrative Templates (Device Configurations)
@@ -48,6 +60,18 @@ Install-Module -Name IntuneBackupAndRestore
 - Device Management Script Assignments
 - Software Update Rings
 - Software Update Ring Assignments
+- Endpoint Security Configurations
+  - Security Baselines
+    - Windows 10 Security Baselines
+    - Microsoft Defender ATP Baselines
+    - Microsoft Edge Baseline
+  - Antivirus
+  - Disk encryption
+  - Firewall
+  - Endpoint detection and response
+  - Attack surface reduction
+  - Account protection
+  - Device compliance
 
 > Please note that some Client App settings can be backed up, for instance the retrieval of Win32 (un)install cmdlets, requirements, etcetera. The Client App itself is not backed up and this module does not support restoring Client Apps at this time.
 
@@ -95,13 +119,23 @@ Invoke-IntuneRestoreDeviceConfiguration -Path C:\temp\IntuneBackup
 Invoke-IntuneRestoreDeviceConfigurationAssignments -Path C:\temp\IntuneBackup
 ```
 
-### Example 06 - Compare two Backup Files for changes
+### Example 06 - Backup Only Intune Endpoint Security Configurations
+```powershell
+Invoke-IntuneBackupDeviceManagementIntent -Path C:\temp\IntuneBackup
+```
+
+### Example 07 - Restore Only Intune Endpoint Security Configurations
+```powershell
+Invoke-IntuneRestoreDeviceManagementIntent -Path C:\temp\IntuneBackup
+```
+
+### Example 08 - Compare two Backup Files for changes
 ```powershell
 # The DifferenceFilePath should point to the latest Intune Backup file, as it might contain new properties.
 Compare-IntuneBackupFile -ReferenceFilePath 'C:\temp\IntuneBackup\Device Configurations\Windows - Endpoint Protection.json' -DifferenceFilePath 'C:\temp\IntuneBackupLatest\Device Configurations\Windows - Endpoint Protection.json'
 ```
 
-### Example 07 - Compare all files in two Backup Directories for changes
+### Example 09 - Compare all files in two Backup Directories for changes
 ```powershell
 # The DifferenceFilePath should point to the latest Intune Backup file, as it might contain new properties.
 Compare-IntuneBackupDirectories -ReferenceDirectory 'C:\temp\IntuneBackup' -DifferenceDirectory 'C:\temp\IntuneBackup2'

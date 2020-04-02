@@ -34,4 +34,5 @@ function Start-IntuneBackup() {
     Invoke-IntuneBackupDeviceManagementScriptAssignment -Path $Path
     Invoke-IntuneBackupGroupPolicyConfiguration -Path $Path
     Invoke-IntuneBackupGroupPolicyConfigurationAssignment -Path $Path
+    Invoke-IntuneBackupDeviceManagementIntent -Path $Path
 }

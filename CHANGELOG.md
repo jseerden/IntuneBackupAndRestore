@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2020-04-02
+- Added function `Invoke-IntuneBackupDeviceManagementIntent`.
+- Added function `Invoke-IntuneRestoreDeviceManagementIntent`.
+- Embedded `Invoke-IntuneBackupDeviceManagementIntent` in the `Start-IntuneBackup` cmdlet.
+- Embedded `Invoke-IntuneRestoreDeviceManagementIntent` in the `Start-IntuneRestoreConfig` cmdlet.
+
 ## [1.4.3] - 2019-12-22
 - Added `Compare-IntuneBackupDirectories` to compare backup files from two backup sets. Co-authored-by: [Bradley Wyatt](https://github.com/bwya77)
 - Fixed an issue with `Compare-IntuneBackupFile`, which would ignore JSON files that had no depth.
