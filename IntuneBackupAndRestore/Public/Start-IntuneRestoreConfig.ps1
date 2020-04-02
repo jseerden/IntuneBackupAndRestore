@@ -28,4 +28,5 @@ function Start-IntuneRestoreConfig() {
     Invoke-IntuneRestoreDeviceConfiguration -Path $Path
     Invoke-IntuneRestoreDeviceManagementScript -Path $Path
     Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path
+    Invoke-IntuneRestoreDeviceManagementIntent -Path $Path
 }
