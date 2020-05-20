@@ -47,6 +47,12 @@
 			
 			$difFileFound = $differenceFiles | Where-Object { $_.FileName -eq $referenceJSONFile }
 			
+			if ($null -eq $difFileFound) {
+				Write-Verbose "The difference file was not found!"
+				Write-Host "MISSING FILE: Reference directory file '$($file.FileName)' is not found in the difference directory."
+				continue
+			}
+			
 			if (($difFileFound.FileName).count -gt 1) {
 				$referenceJSONFile = ($file.Filename).split("\") | Select-Object -last 2
 				$referenceJSONFileParent = ($file.FileName).split("\") | Select-Object -Last 2
@@ -61,7 +67,7 @@
 			
 			$changes = Compare-IntuneBackupFile -ReferenceFilePath $file.FileName -DifferenceFilePath $difFileFound.FullPath -ErrorAction silentlycontinue
 			if ($changes) {
-				Write-Host "There was a change in the file, '$referenceJSONFile' which is located at $($difFileFound.fullpath)"
+				Write-Host "CHANGED FILE: File '$referenceJSONFileParentPath' has changed. See details below.."
 				$changes | Format-Table -AutoSize
 			}
 		}
