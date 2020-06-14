@@ -144,4 +144,3 @@ Compare-IntuneBackupDirectories -ReferenceDirectory 'C:\temp\IntuneBackup' -Diff
 
 ## Known Issues
 - Does not support backing up Intune configuration items with duplicate Display Names. Files may be overwritten.
-- Unable to restore Client App Assignments for Windows Line-of-Business Apps (MSI)

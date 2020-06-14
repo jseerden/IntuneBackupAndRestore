@@ -50,19 +50,19 @@ function Invoke-IntuneRestoreClientAppAssignment {
         
         # Add assignments to restore to the request body
         foreach ($clientAppAssignment in $clientAppAssignments) {
+
+            $clientAppAssignment.settings.installTimeSettings.PSObject.Properties | Foreach-Object {
+                if ($null -ne $_.Value) {
+                    if ($_.Value.GetType().Name -eq "DateTime") {
+                        $_.Value = (Get-Date -Date $_.Value -Format s) + "Z"
+                    }
+                }
+            }
+
             $requestBody.mobileAppAssignments += @{
                 "target"   = $clientAppAssignment.target
                 "intent"   = $clientAppAssignment.intent
                 "settings" = $clientAppAssignment.settings
-            }
-        }
-
-        $requestBody.mobileAppAssignments.settings.installTimeSettings.PSObject.Properties | Foreach-Object {
-            if ($null -ne $_.Value) {
-                $_.Value.GetType().Name
-                if ($_.Value.GetType().Name -eq "DateTime") {
-                    $_.Value = (Get-Date -Date $_.Value -Format s) + "Z"
-                }
             }
         }
 
