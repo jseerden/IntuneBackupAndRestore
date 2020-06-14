@@ -16,8 +16,18 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all device management intents
     $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File
@@ -29,7 +39,7 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
 
         # Restore the device management intent
         try {
-            $null = New-GraphDeviceManagementTemplateInstance -TemplateId $templateId -RequestBody $deviceManagementIntentContent -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/templates/$($templateId)/createInstance" -Content $deviceManagementIntentContent.toString() -ErrorAction Stop
             Write-Output "$deviceManagementIntentDisplayName - Successfully restored Device Management Intent ($templateDisplayName)"
         }
         catch {

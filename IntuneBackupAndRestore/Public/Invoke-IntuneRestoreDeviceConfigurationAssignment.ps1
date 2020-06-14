@@ -25,75 +25,34 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
-        [bool]$RestoreById = $false
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all policies with assignments
     $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments"
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $deviceConfigurationAssignments = Get-Content -LiteralPath $deviceConfiguration.FullName | ConvertFrom-Json
-        $deviceConfigurationId = ($deviceConfigurationAssignments[0]).id.Split("_")[0]
 
         # Create the base requestBody
         $requestBody = @{
-            deviceConfigurationGroupAssignments = @()
             assignments = @()
         }
         
         # Add assignments to restore to the request body
         foreach ($deviceConfigurationAssignment in $deviceConfigurationAssignments) {
-            $deviceConfigurationAssignmentId = ($deviceConfigurationAssignments[0]).id.Split("_")[1]
-
-            # If group assignment
-            if ($deviceConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.groupAssignmentTarget") {
-                $requestBody.deviceConfigurationGroupAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceConfigurationGroupAssignment"
-                    targetGroupId = $deviceConfigurationAssignment.target.groupId
-                }
+            $requestBody.assignments += @{
+                "target" = $deviceConfigurationAssignment.target
             }
-
-            # If exclusion group assignment
-            if ($deviceConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.exclusionGroupAssignmentTarget") {
-                $requestBody.deviceConfigurationGroupAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceConfigurationGroupAssignment"
-                    targetGroupId = $deviceConfigurationAssignment.target.groupId
-                    excludeGroup = $true
-                }
-            } 
-
-            #  If 'All users' assignment 
-            if ($deviceConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.allLicensedUsersAssignmentTarget") {
-                $deviceConfigurationAssignmentId = ($deviceConfigurationAssignments[0]).id.Split("_")[1]
-
-                $requestBody.assignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceConfigurationAssignment"
-                    id = $deviceConfigurationAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allLicensedUsersAssignmentTarget"
-                    }
-                }
-            }
-
-            #  If 'All Devices' assignment 
-            if ($deviceConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.allDevicesAssignmentTarget") {
-                $deviceConfigurationAssignmentId = ($deviceConfigurationAssignments[0]).id.Split("_")[1]
-
-                $requestBody.assignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceConfigurationAssignment"
-                    id = $deviceConfigurationAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allDevicesAssignmentTarget"
-                    }
-                }
-            }
-        }
-
-        # Filter empty keys from HashTable, because mixing group and all users/devices assignments don't play along very well.
-        if (-not ($requestBody.assignments)) {
-            $requestBody.Remove('assignments')
-        }
-        elseif (-not ($requestBody.deviceConfigurationGroupAssignments)) {
-            $requestBody.Remove('deviceConfigurationGroupAssignments')
         }
 
         # Convert the PowerShell object to JSON
@@ -101,11 +60,11 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
 
         # Get the Device Configuration we are restoring the assignments for
         try {
-            if ($RestoreById) {
-                $deviceConfigurationObject = Get-GraphDeviceConfiguration -Id $deviceConfigurationId
+            if ($restoreById) {
+                $deviceConfigurationObject = Get-DeviceManagement_DeviceConfigurations -DeviceConfigurationId $deviceConfigurationAssignments[0].deviceConfigurationId
             }
             else {
-                $deviceConfigurationObject = Get-GraphDeviceConfiguration | Where-Object displayName -eq "$($deviceConfiguration.BaseName)"
+                $deviceConfigurationObject = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceConfiguration.BaseName)"
                 if (-not ($deviceConfigurationObject)) {
                     Write-Warning "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore"
                     continue
@@ -120,7 +79,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
 
         # Restore the assignments
         try {
-            $null = New-GraphDeviceConfigurationAssignment -Id $deviceConfigurationObject.id -RequestBody $requestBody -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations/$($deviceConfigurationObject.id)/assign" -ErrorAction Stop
             Write-Output "$($deviceConfigurationObject.displayName) - Successfully restored Device Configuration Assignment(s)"
         }
         catch {

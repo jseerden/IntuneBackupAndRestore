@@ -16,8 +16,18 @@ function Invoke-IntuneBackupDeviceManagementScript {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Device Management Scripts\Script Content")) {
@@ -25,12 +35,12 @@ function Invoke-IntuneBackupDeviceManagementScript {
     }
 
     # Get all device management scripts
-    $deviceManagementScripts = Get-GraphDeviceManagementScript
+    $deviceManagementScripts = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts" | Get-MSGraphAllPages
 
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         Write-Output "Backing Up - Device Management Script: $($deviceManagementScript.displayName)"
         # ScriptContent returns null, so we have to query Microsoft Graph for each script
-        $deviceManagementScriptObject = Get-GraphDeviceManagementScript -Id $deviceManagementScript.Id
+        $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScript.Id)"
         $deviceManagementScriptFileName = ($deviceManagementScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $deviceManagementScriptObject | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\$deviceManagementScriptFileName.json"
 

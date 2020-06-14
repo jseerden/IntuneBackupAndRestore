@@ -16,8 +16,18 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all Device Compliance Policies
     $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
@@ -25,9 +35,34 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName -Raw
         $deviceCompliancePolicyDisplayName = ($deviceCompliancePolicyContent | ConvertFrom-Json).displayName
 
+        # Remove properties that are not available for creating a new configuration
+        $requestBodyObject = $deviceCompliancePolicyContent | ConvertFrom-Json
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
+
+        # If missing, adds a default required block scheduled action to the compliance policy request body, as this value is not returned when retrieving compliance policies.
+        $requestBodyObject = $requestBody | ConvertFrom-Json
+        if (-not ($requestBodyObject.scheduledActionsForRule)) {
+            $scheduledActionsForRule = @(
+                @{
+                    ruleName = "PasswordRequired"
+                    scheduledActionConfigurations = @(
+                        @{
+                            actionType = "block"
+                            gracePeriodHours = 0
+                            notificationTemplateId = ""
+                        }
+                    )
+                }
+            )
+            $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
+            
+            # Update the request body reflecting the changes
+            $requestBody = $requestBodyObject | ConvertTo-Json -Depth 4
+        }
+
         # Restore the Device Compliance Policy
         try {
-            $null = New-GraphDeviceCompliancePolicy -RequestBody $deviceCompliancePolicyContent -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
             Write-Output "$deviceCompliancePolicyDisplayName - Successfully restored Device Compliance Policy"
         }
         catch {

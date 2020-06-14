@@ -16,8 +16,18 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Device Compliance Policies")) {
@@ -25,8 +35,8 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-GraphDeviceCompliancePolicy
-
+    $deviceCompliancePolicies = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages
+    
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         Write-Output "Backing Up - Device Compliance Policy: $($deviceCompliancePolicy.displayName)"
         $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'

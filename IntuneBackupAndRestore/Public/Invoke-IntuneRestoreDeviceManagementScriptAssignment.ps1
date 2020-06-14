@@ -25,8 +25,18 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
-        [bool]$RestoreById = $false
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all policies with assignments
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments"
@@ -36,61 +46,14 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
 
         # Create the base requestBody
         $requestBody = @{
-            deviceManagementScriptGroupAssignments = @()
             deviceManagementScriptAssignments = @()
         }
         
         # Add assignments to restore to the request body
         foreach ($deviceManagementScriptAssignment in $deviceManagementScriptAssignments) {
-            $deviceManagementScriptAssignmentId = ($deviceManagementScriptAssignments[0]).id.Split(":")[1]
-            # If group assignment
-            if ($deviceManagementScriptAssignment.target."@odata.type" -eq "#microsoft.graph.groupAssignmentTarget") {
-                $requestBody.deviceManagementScriptGroupAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceManagementScriptGroupAssignment"
-                    targetGroupId = $deviceManagementScriptAssignment.target.groupId
-                }
+            $requestBody.deviceManagementScriptAssignments += @{
+                "target" = $deviceManagementScriptAssignment.target
             }
-
-            # If exclusion group assignment
-            if ($deviceManagementScriptAssignment.target."@odata.type" -eq "#microsoft.graph.exclusionGroupAssignmentTarget") {
-                $requestBody.deviceManagementScriptGroupAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceManagementScriptGroupAssignment"
-                    targetGroupId = $deviceManagementScriptAssignment.target.groupId
-                    excludeGroup = $true
-                }
-            } 
-
-            #  If 'All users' assignment 
-            if ($deviceManagementScriptAssignment.target."@odata.type" -eq "#microsoft.graph.allLicensedUsersAssignmentTarget") {
-
-                $requestBody.deviceManagementScriptAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceManagementScriptAssignment"
-                    id = $deviceManagementScriptAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allLicensedUsersAssignmentTarget"
-                    }
-                }
-            }
-
-            #  If 'All Devices' assignment 
-            if ($deviceManagementScriptAssignment.target."@odata.type" -eq "#microsoft.graph.allDevicesAssignmentTarget") {
-
-                $requestBody.deviceManagementScriptAssignments += @{
-                    "@odata.type" = "#microsoft.graph.deviceManagementScriptAssignment"
-                    id = $deviceManagementScriptAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allDevicesAssignmentTarget"
-                    }
-                }
-            }
-        }
-
-        # Filter empty keys from HashTable, because mixing group and all users/devices assignments don't play along very well.
-        if (-not ($requestBody.deviceManagementScriptAssignments)) {
-            $requestBody.Remove('deviceManagementScriptAssignments')
-        }
-        elseif (-not ($requestBody.deviceManagementScriptGroupAssignments)) {
-            $requestBody.Remove('deviceManagementScriptGroupAssignments')
         }
 
         # Convert the PowerShell object to JSON
@@ -98,11 +61,11 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
 
         # Get the Device Management Script we are restoring the assignments for
         try {
-            if ($RestoreById) {
-                $deviceManagementScriptObject = Get-GraphDeviceManagementScript -Id $deviceManagementScriptId
+            if ($restoreById) {
+                $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$deviceManagementScriptId"
             }
             else {
-                $deviceManagementScriptObject = Get-GraphDeviceManagementScript | Where-Object displayName -eq "$($deviceManagementScript.BaseName)"
+                $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts" | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceManagementScript.BaseName)"
                 if (-not ($deviceManagementScriptObject)) {
                     Write-Warning "Error retrieving Intune Device Management Script for $($deviceManagementScript.FullName). Skipping assignment restore"
                     continue
@@ -117,7 +80,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
 
         # Restore the assignments
         try {
-            $null = New-GraphDeviceManagementScriptAssignment -Id $deviceManagementScriptObject.id -RequestBody $requestBody -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScriptObject.id)/assign" -ErrorAction Stop
             Write-Output "$($deviceManagementScriptObject.displayName) - Successfully restored Device Management Script Assignment(s)"
         }
         catch {

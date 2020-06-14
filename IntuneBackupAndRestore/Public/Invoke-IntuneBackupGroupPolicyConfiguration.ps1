@@ -16,8 +16,18 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Administrative Templates")) {
@@ -25,16 +35,15 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
     }
 
     # Get all Group Policy Configurations
-    $groupPolicyConfigurations = Get-GraphGroupPolicyConfiguration
+    $groupPolicyConfigurations = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $groupPolicyDefinitionValues = Get-GraphGroupPolicyDefinitionValue -GroupPolicyConfigurationId $groupPolicyConfiguration.id
-
+        $groupPolicyDefinitionValues = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues" | Get-MSGraphAllPages
         $groupPolicyBackupValues = @()
 
-        foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues.Value) {
-            $groupPolicyDefinition = Get-GraphGroupPolicyDefinition -GroupPolicyConfigurationId $groupPolicyConfiguration.id -GroupPolicyDefinitionValueId $groupPolicyDefinitionValue.id
-            $groupPolicyPresentationValues = (Get-GraphGroupPolicyPresentationValue -GroupPolicyConfigurationId $groupPolicyConfiguration.id -GroupPolicyDefinitionValueId $groupPolicyDefinitionValue.id).Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
+        foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues) {
+            $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
+            $groupPolicyPresentationValues = (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation").Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
             $groupPolicyBackupValue = @{
                 "enabled" = $groupPolicyDefinitionValue.enabled
                 "definition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"

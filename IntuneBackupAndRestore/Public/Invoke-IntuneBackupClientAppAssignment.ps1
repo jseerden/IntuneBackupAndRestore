@@ -16,8 +16,18 @@ function Invoke-IntuneBackupClientAppAssignment {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Client Apps\Assignments")) {
@@ -25,14 +35,14 @@ function Invoke-IntuneBackupClientAppAssignment {
     }
 
     # Get all assignments from all policies
-    $clientApps = Get-GraphClientApp
+    $clientApps = Get-DeviceAppManagement_MobileApps | Get-MSGraphAllPages
 
     foreach ($clientApp in $clientApps) {
-        $assignments = Get-GraphClientAppAssignment -Id $clientApp.id 
+        $assignments = Get-DeviceAppManagement_MobileApps_Assignments -MobileAppId $clientApp.id 
         if ($assignments) {
             Write-Output "Backing Up - Client App - Assignments: $($clientApp.displayName)"
             $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+            $assignments | ConvertTo-Json -Depth 3 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
         }
     }
 }
