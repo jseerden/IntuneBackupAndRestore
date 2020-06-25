@@ -61,7 +61,7 @@
 			
 			$changes = Compare-IntuneBackupFile -ReferenceFilePath $file.FileName -DifferenceFilePath $difFileFound.FullPath -ErrorAction silentlycontinue
 			if ($changes) {
-				Write-Host "There was a change in the file, '$referenceJSONFile' which is located at $($difFileFound.fullpath)"
+				Write-Output "There was a change in the file, '$referenceJSONFile' which is located at $($difFileFound.fullpath)"
 				$changes | Format-Table -AutoSize
 			}
 		}

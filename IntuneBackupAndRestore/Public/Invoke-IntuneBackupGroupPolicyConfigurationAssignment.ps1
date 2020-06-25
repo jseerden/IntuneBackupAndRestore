@@ -16,8 +16,18 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Administrative Templates\Assignments")) {
@@ -25,10 +35,11 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
     }
 
     # Get all assignments from all policies
-    $groupPolicyConfigurations = Get-GraphGroupPolicyConfiguration
+    $groupPolicyConfigurations = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $assignments = Get-GraphGroupPolicyConfigurationAssignment -Id $groupPolicyConfiguration.id 
+        $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/assignments" | Get-MSGraphAllPages
+        
         if ($assignments) {
             Write-Output "Backing Up - Administrative Templates - Assignments: $($groupPolicyConfiguration.displayName)"
             $fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'

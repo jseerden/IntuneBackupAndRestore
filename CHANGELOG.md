@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2020-06-15
+### BREAKING
+- Refactored the IntuneBackupAndRestore module to depend on Microsoft.Graph.Intune module, instead of the custom MSGraphFunctions module.
+- Fixed an issue where restoring assignments could result in an error. Now also supports restoring assignments for Line-of-Business Client Apps.
+
+
 ## [1.5.0] - 2020-04-02
 - Added function `Invoke-IntuneBackupDeviceManagementIntent`.
 - Added function `Invoke-IntuneRestoreDeviceManagementIntent`.

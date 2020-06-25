@@ -16,19 +16,31 @@ function Invoke-IntuneBackupDeviceManagementIntent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Device Management Intents")) {
         $null = New-Item -Path "$Path\Device Management Intents" -ItemType Directory
     }
 
-    $intents = Get-GraphDeviceManagementIntent
+    Write-Verbose "Requesting Intents"
+    $intents = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/intents" | Get-MSGraphAllPages
 
     foreach ($intent in $intents) {
         # Get the corresponding Device Management Template
-        $template = Get-GraphDeviceManagementTemplate -Id $intent.templateId
+        Write-Verbose "Requesting Template"
+        $template = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/templates/$($intent.templateId)"
         $templateDisplayName = ($template.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
         Write-Output "Backing Up - Device Management Intent ($($template.displayName)): $($intent.displayName)"
@@ -38,11 +50,14 @@ function Invoke-IntuneBackupDeviceManagementIntent {
         }
         
         # Get all setting categories in the Device Management Template
-        $templateCategories = Get-GraphDeviceManagementTemplateSettingCategory -Id $intent.templateId
+        Write-Verbose "Requesting Template Categories"
+        $templateCategories = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/templates/$($intent.templateId)/categories" | Get-MSGraphAllPages
+
         $intentSettingsDelta = @()
         foreach ($templateCategory in $templateCategories) {
             # Get all configured values for the template categories
-            $intentSettingsDelta += Get-GraphDeviceManagementIntentSettingValue -Id $intent.id -CategoryId $templateCategory.id
+            Write-Verbose "Requesting Intent Setting Values"
+            $intentSettingsDelta += (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/intents/$($intent.id)/categories/$($templateCategory.id)/settings").value
         }
 
         $intentBackupValue = @{

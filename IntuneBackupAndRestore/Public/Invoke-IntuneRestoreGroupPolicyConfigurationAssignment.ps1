@@ -25,8 +25,18 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
-        [bool]$RestoreById = $false
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all policies with assignments
     $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates\Assignments"
@@ -41,52 +51,8 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         
         # Add assignments to restore to the request body
         foreach ($groupPolicyConfigurationAssignment in $groupPolicyConfigurationAssignments) {
-            $groupPolicyConfigurationAssignmentId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[1]
-
-            # If group assignment
-            if ($groupPolicyConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.groupAssignmentTarget") {
-                $requestBody.assignments += @{
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.groupAssignmentTarget"
-                        groupId = $groupPolicyConfigurationAssignment.target.groupId
-                    }
-                }
-            }
-
-            # If exclusion group assignment
-            if ($groupPolicyConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.exclusionGroupAssignmentTarget") {
-                $requestBody.assignments += @{
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.exclusionGroupAssignmentTarget"
-                        groupId = $groupPolicyConfigurationAssignment.target.groupId
-                    }
-                }
-            } 
-
-            #  If 'All users' assignment 
-            if ($groupPolicyConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.allLicensedUsersAssignmentTarget") {
-                $groupPolicyConfigurationAssignmentId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[1]
-
-                $requestBody.assignments += @{
-                    "@odata.type" = "#microsoft.graph.groupPolicyConfigurationAssignment"
-                    id = $groupPolicyConfigurationAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allLicensedUsersAssignmentTarget"
-                    }
-                }
-            }
-
-            #  If 'All Devices' assignment 
-            if ($groupPolicyConfigurationAssignment.target."@odata.type" -eq "#microsoft.graph.allDevicesAssignmentTarget") {
-                $groupPolicyConfigurationAssignmentId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[1]
-
-                $requestBody.assignments += @{
-                    "@odata.type" = "#microsoft.graph.groupPolicyConfigurationAssignment"
-                    id = $groupPolicyConfigurationAssignmentId
-                    target = @{
-                        "@odata.type" = "#microsoft.graph.allDevicesAssignmentTarget"
-                    }
-                }
+            $requestBody.assignments += @{
+                "target" = $groupPolicyConfigurationAssignment.target
             }
         }
 
@@ -95,11 +61,11 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
 
         # Get the Group Policy Configuration we are restoring the assignments for
         try {
-            if ($RestoreById) {
-                $groupPolicyConfigurationObject = Get-GraphGroupPolicyConfiguration -Id $groupPolicyConfigurationId
+            if ($restoreById) {
+                $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$groupPolicyConfigurationId"
             }
             else {
-                $groupPolicyConfigurationObject = Get-GraphGroupPolicyConfiguration | Where-Object displayName -eq "$($groupPolicyConfiguration.BaseName)"
+                $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages | Where-Object displayName -eq "$($groupPolicyConfiguration.BaseName)"
                 if (-not ($groupPolicyConfigurationObject)) {
                     Write-Warning "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore"
                     continue
@@ -114,7 +80,7 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
 
         # Restore the assignments
         try {
-            $null = New-GraphGroupPolicyConfigurationAssignment -Id $groupPolicyConfigurationObject.id -RequestBody $requestBody -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/assign" -ErrorAction Stop
             Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored Administrative Template Assignment(s)"
         }
         catch {

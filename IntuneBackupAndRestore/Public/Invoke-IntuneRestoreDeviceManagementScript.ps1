@@ -16,18 +16,32 @@ function Invoke-IntuneRestoreDeviceManagementScript {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Get all device management scripts
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         $deviceManagementScriptContent = Get-Content -LiteralPath $deviceManagementScript.FullName -Raw
-        $deviceManagementScriptDisplayName = ($deviceManagementScriptContent | ConvertFrom-Json).displayName        
+        $deviceManagementScriptDisplayName = ($deviceManagementScriptContent | ConvertFrom-Json).displayName  
+        
+        # Remove properties that are not available for creating a new configuration
+        $requestBodyObject = $deviceManagementScriptContent | ConvertFrom-Json
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
 
         # Restore the device management script
         try {
-            $null = New-GraphDeviceManagementScript -RequestBody $deviceManagementScriptContent -ErrorAction Stop
+            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts" -ErrorAction Stop
             Write-Output "$deviceManagementScriptDisplayName - Successfully restored Device Management Script"
         }
         catch {

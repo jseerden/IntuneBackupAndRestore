@@ -16,8 +16,18 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("v1.0", "Beta")]
+        [string]$ApiVersion = "Beta"
     )
+
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
+        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
+        Connect-MSGraph -ForceNonInteractive -Quiet
+    }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Device Configurations\Assignments")) {
@@ -25,10 +35,10 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
     }
 
     # Get all assignments from all policies
-    $deviceConfigurations = Get-GraphDeviceConfiguration
+    $deviceConfigurations = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages
 
     foreach ($deviceConfiguration in $deviceConfigurations) {
-        $assignments = Get-GraphDeviceConfigurationAssignment -Id $deviceConfiguration.id 
+        $assignments = Get-DeviceManagement_DeviceConfigurations_Assignments -DeviceConfigurationId $deviceConfiguration.id 
         if ($assignments) {
             Write-Output "Backing Up - Device Configuration - Assignments: $($deviceConfiguration.displayName)"
             $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
