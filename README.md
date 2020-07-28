@@ -20,6 +20,7 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 
 - Requires [Microsoft.Graph.Intune](https://github.com/Microsoft/Intune-PowerShell-SDK/) PowerShell Module (`Install-Module -Name Microsoft.Graph.Intune`)
 - Connect to Microsoft Graph using the `Connect-MSGraph` PSCmdlet first.
+- Make sure to import the IntuneBackupAndRestore PowerShell module before using it with the `Import-Module IntuneBackupAndRestore` cmdlet.
 
 ## Features
 
