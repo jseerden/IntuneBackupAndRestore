@@ -27,6 +27,7 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 ### Backup actions
 - Administrative Templates (Device Configurations)
 - Administrative Template Assignments
+- App Protection Policies
 - Client Apps
 - Client App Assignments
 - Device Compliance Policies
@@ -53,6 +54,7 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 ### Restore actions
 - Administrative Templates (Device Configurations)
 - Administrative Template Assignments
+- App Protection Policies
 - Client App Assignments
 - Device Compliance Policies
 - Device Compliance Policy Assignments
