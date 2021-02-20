@@ -51,7 +51,7 @@ function Invoke-IntuneRestoreDeviceConfiguration {
             }
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 5
 
         # Restore the device configuration
         try {

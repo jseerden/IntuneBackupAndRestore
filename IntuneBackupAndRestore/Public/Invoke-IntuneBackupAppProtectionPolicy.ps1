@@ -40,6 +40,6 @@ function Invoke-IntuneBackupAppProtectionPolicy {
     foreach ($AppProtectionPolicy in $AppProtectionPolicies) {
         Write-Output "Backing Up - App Protection Policy: $($AppProtectionPolicy.displayName)"
         $fileName = ($AppProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $AppProtectionPolicy | ConvertTo-Json | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+        $AppProtectionPolicy | ConvertTo-Json -Depth 5 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
     }
 }
