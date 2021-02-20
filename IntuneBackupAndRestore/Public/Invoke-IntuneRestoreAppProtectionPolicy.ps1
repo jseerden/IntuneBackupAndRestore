@@ -51,7 +51,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
             }
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 5
 
         # Restore the App Protection Policy
         try {

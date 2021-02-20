@@ -37,7 +37,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
 
         # Remove properties that are not available for creating a new configuration
         $requestBodyObject = $deviceCompliancePolicyContent | ConvertFrom-Json
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json -Depth 5
 
         # If missing, adds a default required block scheduled action to the compliance policy request body, as this value is not returned when retrieving compliance policies.
         $requestBodyObject = $requestBody | ConvertFrom-Json
