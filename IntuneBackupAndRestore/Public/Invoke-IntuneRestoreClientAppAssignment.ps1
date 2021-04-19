@@ -41,7 +41,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
     foreach ($clientApp in $clientApps) {
         $clientAppAssignments = Get-Content -LiteralPath $clientApp.FullName | ConvertFrom-Json
         $clientAppId = ($clientApp.BaseName -split " - ")[0]
-        $clientAppName = ($clientApp.BaseName -split " - ")[1]
+        $clientAppName = ($clientApp.BaseName -split " - ",2)[-1]
 
         # Create the base requestBody
         $requestBody = @{
