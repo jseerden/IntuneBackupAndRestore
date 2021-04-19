@@ -36,6 +36,7 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 - Device Configuration Assignments
 - Device Management Scripts (Device Configuration -> PowerShell Scripts)
 - Device Management Script Assignments
+- Session Catalog Policies
 - Software Update Rings
 - Software Update Ring Assignments
 - Endpoint Security Configurations
@@ -62,6 +63,7 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 - Device Configuration Assignments
 - Device Management Scripts (Device Configuration -> PowerShell Scripts)
 - Device Management Script Assignments
+- Session Catalog Policies
 - Software Update Rings
 - Software Update Ring Assignments
 - Endpoint Security Configurations
