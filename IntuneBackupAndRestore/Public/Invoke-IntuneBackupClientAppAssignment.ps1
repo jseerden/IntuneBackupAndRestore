@@ -35,7 +35,7 @@ function Invoke-IntuneBackupClientAppAssignment {
     }
 
     # Get all assignments from all policies
-    $clientApps = Get-DeviceAppManagement_MobileApps | Get-MSGraphAllPages
+    $clientApps = Invoke-MSGraphRequest -Url 'deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)' | Get-MSGraphAllPages
 
     foreach ($clientApp in $clientApps) {
         $assignments = Get-DeviceAppManagement_MobileApps_Assignments -MobileAppId $clientApp.id 
