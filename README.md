@@ -13,6 +13,12 @@ Intune Configuration is backed up as (json) files in a given directory.
 ```powershell
 # Install IntuneBackupAndRestore from the PowerShell Gallery
 Install-Module -Name IntuneBackupAndRestore
+
+## Updating IntuneBackupAndRestore
+
+```powershell
+# Update IntuneBackupAndRestore from the PowerShell Gallery
+Update-Module -Name IntuneBackupAndRestore
 ```
 
 ## Prerequisites
@@ -37,7 +43,8 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 - Device Configuration Assignments
 - Device Management Scripts (Device Configuration -> PowerShell Scripts)
 - Device Management Script Assignments
-- Session Catalog Policies
+- Settings Catalog Policies
+- Settings Catalog Policy Assignments
 - Software Update Rings
 - Software Update Ring Assignments
 - Endpoint Security Configurations
@@ -65,7 +72,8 @@ As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated f
 - Device Configuration Assignments
 - Device Management Scripts (Device Configuration -> PowerShell Scripts)
 - Device Management Script Assignments
-- Session Catalog Policies
+- Settings Catalog Policies
+- Settings Catalog Policy Assignments
 - Software Update Rings
 - Software Update Ring Assignments
 - Endpoint Security Configurations
