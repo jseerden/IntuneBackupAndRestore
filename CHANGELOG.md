@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2021-06-17
+- Added support for backing up and restoring App Protection Policy assignments.
+- Added support for backing up and restoring Settings Catalog profiles.
+- Added support for backing up and restoring Settings Catalog assignments.
+- Updated backup and restore output using a [PSCustomObject].
+- Updated JSON depth across all functions for uniformity and to prevent (future) issues depending on the data that is being backed up/restored.
+- Updated Device Management Intents, such as Windows 10 Security Baselines, where backups use a shorter filename, as users could run into issues with too long filepaths.
+- Fixed an issue that would backup non-configured apps. (#38)
+
+
 ## [2.1.1] - 2021-02-20
 - Fixed an issue where some properties in certain configurations, such as iOS Device restrictions, would not back-up, and would result in a failure during restore. 
 
