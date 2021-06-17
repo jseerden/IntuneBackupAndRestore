@@ -83,7 +83,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
             }
         }
         catch {
-            Write-Output "Error retrieving Intune Client App for $($clientApp.FullName), does it exist in the Intune tenant? Skipping assignment restore ..."
+            Write-Verbose "Error retrieving Intune Client App for $($clientApp.FullName), does it exist in the Intune tenant? Skipping assignment restore ..." -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -91,14 +91,19 @@ function Invoke-IntuneRestoreClientAppAssignment {
         # Restore the assignments
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/mobileApps/$($clientAppObject.id)/assign" -ErrorAction Stop
-            Write-Output "$($clientAppObject.displayName) - Successfully restored Client App Assignment(s)"
+            [PSCustomObject]@{
+                "Action" = "Restore Assignments"
+                "Type"   = "Client App Assignments"
+                "Name"   = $clientAppObject.displayName
+                "Path"   = "Client Apps\Assignments\$($clientApp.Name)"
+            }
         }
         catch {
             if ($_.Exception.Message -match "The MobileApp Assignment already exist") {
-                Write-Output "$($clientAppObject.displayName) - The Client App Assignment already exists"
+                Write-Verbose "$($clientAppObject.displayName) - The Client App Assignment already exists" -Verbose
             }
             else {
-                Write-Output "$($clientAppObject.displayName) - Failed to restore Client App Assignment(s)"
+                Write-Verbose "$($clientAppObject.displayName) - Failed to restore Client App Assignment(s)" -Verbose
                 Write-Error $_ -ErrorAction Continue
             }
         }

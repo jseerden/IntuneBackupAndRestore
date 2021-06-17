@@ -38,7 +38,6 @@ function Invoke-IntuneBackupDeviceManagementScript {
     $deviceManagementScripts = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts" | Get-MSGraphAllPages
 
     foreach ($deviceManagementScript in $deviceManagementScripts) {
-        Write-Output "Backing Up - Device Management Script: $($deviceManagementScript.displayName)"
         # ScriptContent returns null, so we have to query Microsoft Graph for each script
         $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScript.Id)"
         $deviceManagementScriptFileName = ($deviceManagementScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
@@ -46,5 +45,12 @@ function Invoke-IntuneBackupDeviceManagementScript {
 
         $deviceManagementScriptContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($deviceManagementScriptObject.scriptContent))
         $deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$deviceManagementScriptFileName.ps1"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Device Management Script"
+            "Name"   = $deviceManagementScript.displayName
+            "Path"   = "Device Management Scripts\$deviceManagementScriptFileName.json"
+        }
     }
 }

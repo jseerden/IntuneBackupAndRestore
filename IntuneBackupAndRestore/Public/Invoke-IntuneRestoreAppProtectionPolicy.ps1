@@ -30,14 +30,14 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
     }
 
     # Get all App Protection Policies
-    $AppProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File
+    $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File
     
-    foreach ($AppProtectionPolicy in $AppProtectionPolicies) {
-        $AppProtectionPolicyContent = Get-Content -LiteralPath $AppProtectionPolicy.FullName -Raw
-        $AppProtectionPolicyDisplayName = ($AppProtectionPolicyContent | ConvertFrom-Json).displayName
+    foreach ($appProtectionPolicy in $appProtectionPolicies) {
+        $appProtectionPolicyContent = Get-Content -LiteralPath $appProtectionPolicy.FullName -Raw
+        $appProtectionPolicyDisplayName = ($appProtectionPolicyContent | ConvertFrom-Json).displayName
 
         # Remove properties that are not available for creating a new configuration
-        $requestBodyObject = $AppProtectionPolicyContent | ConvertFrom-Json
+        $requestBodyObject = $appProtectionPolicyContent | ConvertFrom-Json
         # Set SupportsScopeTags to $false, because $true currently returns an HTTP Status 400 Bad Request error.
         if ($requestBodyObject.supportsScopeTags) {
             $requestBodyObject.supportsScopeTags = $false
@@ -56,10 +56,16 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
         # Restore the App Protection Policy
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/managedAppPolicies" -ErrorAction Stop
-            Write-Output "$AppProtectionPolicyDisplayName - Successfully restored App Protection Policy"
+
+            [PSCustomObject]@{
+                "Action" = "Restore Config"
+                "Type"   = "App Protection Policy"
+                "Name"   = $appProtectionPolicyDisplayName
+                "Path"   = "App Protection Policies\$($appProtectionPolicy.Name)"
+            }
         }
         catch {
-            Write-Output "$AppProtectionPolicyDisplayName - Failed to restore App Protection Policy"
+            Write-Verbose "$appProtectionPolicyDisplayName - Failed to restore App Protection Policy" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

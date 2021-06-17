@@ -40,9 +40,15 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $assignments = Get-DeviceManagement_DeviceConfigurations_Assignments -DeviceConfigurationId $deviceConfiguration.id 
         if ($assignments) {
-            Write-Output "Backing Up - Device Configuration - Assignments: $($deviceConfiguration.displayName)"
             $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Configurations\Assignments\$fileName.json"
+
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "Device Configuration Assignments"
+                "Name"   = $deviceConfiguration.displayName
+                "Path"   = "Device Configurations\Assignments\$fileName.json"
+            }
         }
     }
 }

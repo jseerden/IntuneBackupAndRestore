@@ -24,6 +24,14 @@ function Start-IntuneRestoreConfig() {
         [string]$Path
     )
 
+    [PSCustomObject]@{
+        "Action" = "Restore Config"
+        "Type"   = "Intune Backup and Restore Action"
+        "Name"   = "IntuneBackupAndRestore - Start Intune Restore Config"
+        "Path"   = $Path
+    }
+
+    Invoke-IntuneRestoreConfigurationPolicy -Path $Path
     Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path
     Invoke-IntuneRestoreDeviceConfiguration -Path $Path
     Invoke-IntuneRestoreDeviceManagementScript -Path $Path

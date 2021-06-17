@@ -41,9 +41,15 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
         $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/assignments" | Get-MSGraphAllPages
         
         if ($assignments) {
-            Write-Output "Backing Up - Administrative Templates - Assignments: $($groupPolicyConfiguration.displayName)"
             $fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Administrative Templates\Assignments\$fileName.json"
+
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "Administrative Template Assignments"
+                "Name"   = $groupPolicyConfiguration.displayName
+                "Path"   = "Administrative Templates\Assignments\$fileName.json"
+            }
         }
     }
 }

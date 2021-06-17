@@ -72,7 +72,7 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
             }
         }
         catch {
-            Write-Output "Error retrieving App Protection Policy for $appProtectionPolicyName, does it exist in the Intune tenant? Skipping assignment restore ..."
+            Write-Verbose "Error retrieving App Protection Policy for $appProtectionPolicyName, does it exist in the Intune tenant? Skipping assignment restore ..." -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -82,30 +82,33 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
             # If Android
             if ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
                 $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/androidManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
-                Write-Output "$($appProtectionPolicyObject.displayName) - Successfully restored Android App Protection Policy Assignment(s)"
             }
             # Elseif iOS
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
                 $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/iosManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
-                Write-Output "$($appProtectionPolicyObject.displayName) - Successfully restored iOS App Protection Policy Assignment(s)"
             }
             # Elseif Windows 10 with enrollment
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
                 $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/mdmWindowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
-                Write-Output "$($appProtectionPolicyObject.displayName) - Successfully restored Windows 10 MDM App Protection Policy Assignment(s)"
             }
             # Elseif Windows 10 without Enrollment
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
                 $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/windowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
-                Write-Output "$($appProtectionPolicyObject.displayName) - Successfully restored Windows 10 WE App Protection Policy Assignment(s)"
+            }
+
+            [PSCustomObject]@{
+                "Action" = "Restore Assignments"
+                "Type"   = "App Protection Policy Assignments"
+                "Name"   = $appProtectionPolicyName
+                "Path"   = "App Protection Policies\Assignments\$($appProtectionPolicy.Name)"
             }
         }
         catch {
             if ($_.Exception.Message -match "The App Protection Policy Assignment already exist") {
-                Write-Output "$($appProtectionPolicyObject.displayName) - The App Protection Policy Assignment already exists"
+                Write-Verbose "$($appProtectionPolicyObject.displayName) - The App Protection Policy Assignment already exists" -Verbose
             }
             else {
-                Write-Output "$($appProtectionPolicyObject.displayName) - Failed to restore App Protection Policy Assignment(s)"
+                Write-Verbose "$($appProtectionPolicyObject.displayName) - Failed to restore App Protection Policy Assignment(s)" -Verbose
                 Write-Error $_ -ErrorAction Continue
             }
         }

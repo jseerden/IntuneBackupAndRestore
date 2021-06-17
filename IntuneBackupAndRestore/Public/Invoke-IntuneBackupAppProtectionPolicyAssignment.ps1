@@ -41,30 +41,18 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
         # If Android
         if ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
             $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
-            if ($assignments) {
-                Write-Output "Backing Up - Android App Protection Policy - Assignments: $($appProtectionPolicy.displayName)"
-            }
         }
         # Elseif iOS
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
             $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
-            if ($assignments) {
-                Write-Output "Backing Up - iOS App Protection Policy - Assignments: $($appProtectionPolicy.displayName)"
-            }
         }
         # Elseif Windows 10 with enrollment
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
             $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/mdmWindowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
-            if ($assignments) {
-                Write-Output "Backing Up - Windows 10 (MDM) App Protection Policy - Assignments: $($appProtectionPolicy.displayName)"
-            }
         }
         # Elseif Windows 10 without enrollment
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
             $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/windowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
-            if ($assignments) {
-                Write-Output "Backing Up - Windows 10 (WE) App Protection Policy - Assignments: $($appProtectionPolicy.displayName)"
-            }
         }
         else {
             # Not supported App Protection Policy
@@ -73,5 +61,12 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
 
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "App Protection Policy Assignments"
+            "Name"   = $appProtectionPolicy.displayName
+            "Path"   = "App Protection Policies\Assignments\$fileName.json"
+        }
     }
 }

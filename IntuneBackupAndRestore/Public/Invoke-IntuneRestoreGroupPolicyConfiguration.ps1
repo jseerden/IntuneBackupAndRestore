@@ -35,25 +35,32 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json
         
-        # Remove properties that are not available for creating a new configuration
-        $requestBody = ($groupPolicyConfigurationContent | ConvertTo-Json).toString()
-
         # Restore the Group Policy Configuration
         try {
             $groupPolicyConfigurationRequestBody = @{
                 displayName = $groupPolicyConfiguration.BaseName
             }
             $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations" -Content ($groupPolicyConfigurationRequestBody | ConvertTo-Json).toString() -ErrorAction Stop
-            Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored base Group Policy Configuration"
+            [PSCustomObject]@{
+                "Action" = "Restore Config"
+                "Type"   = "Administrative Template"
+                "Name"   = $groupPolicyConfigurationObject.displayName
+                "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
+            }
 
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
                 $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
                 $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
-                Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored '$($groupPolicyDefinition.displayName)' Setting for Group Policy Configuration"
+                [PSCustomObject]@{
+                    "Action" = "Restore Config"
+                    "Type"   = "Administrative Template Setting"
+                    "Name"   = $groupPolicyDefinition.displayName
+                    "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
+                }
             }
         }
         catch {
-            Write-Output "$($groupPolicyConfiguration.BaseName) - Failed to restore Group Policy Configuration and/or (one or more) Settings"
+            Write-Verbose "$($groupPolicyConfiguration.BaseName) - Failed to restore Group Policy Configuration and/or (one or more) Settings" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

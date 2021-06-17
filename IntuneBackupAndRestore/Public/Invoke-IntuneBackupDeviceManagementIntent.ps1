@@ -43,8 +43,6 @@ function Invoke-IntuneBackupDeviceManagementIntent {
         $template = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/templates/$($intent.templateId)"
         $templateDisplayName = ($template.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
-        Write-Output "Backing Up - Device Management Intent ($($template.displayName)): $($intent.displayName)"
-
         if (-not (Test-Path "$Path\Device Management Intents\$templateDisplayName")) {
             $null = New-Item -Path "$Path\Device Management Intents\$templateDisplayName" -ItemType Directory
         }
@@ -67,7 +65,14 @@ function Invoke-IntuneBackupDeviceManagementIntent {
             "roleScopeTagIds" = $intent.roleScopeTagIds
         }
         
-        $deviceManagementIntentFileName = ("$($template.id)_$($template.displayName)_$($intent.displayName)_$($intent.id)").Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $intentBackupValue | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Intents\$templateDisplayName\$deviceManagementIntentFileName.json"
+        $fileName = ("$($template.id)_$($intent.displayName)").Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+        $intentBackupValue | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Intents\$templateDisplayName\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Device Management Intent"
+            "Name"   = $intent.displayName
+            "Path"   = "Device Management Intents\$templateDisplayName\$fileName.json"
+        }
     }
 }

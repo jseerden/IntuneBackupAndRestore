@@ -38,11 +38,17 @@ function Invoke-IntuneBackupClientApp {
     $clientApps = Invoke-MSGraphRequest -Url 'deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)' | Get-MSGraphAllPages
 
     foreach ($clientApp in $clientApps) {
-        Write-Output "Backing Up - Client App: $($clientApp.displayName)"
         $clientAppType = $clientApp.'@odata.type'.split('.')[-1]
 
         $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $clientAppDetails = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/mobileApps/$($clientApp.id)"
         $clientAppDetails | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Client App"
+            "Name"   = $clientApp.displayName
+            "Path"   = "Client Apps\$($clientAppType)_$($fileName).json"
+        }
     }
 }

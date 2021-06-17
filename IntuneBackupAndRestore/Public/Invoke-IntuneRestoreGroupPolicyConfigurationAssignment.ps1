@@ -67,13 +67,13 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
             else {
                 $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages | Where-Object displayName -eq "$($groupPolicyConfiguration.BaseName)"
                 if (-not ($groupPolicyConfigurationObject)) {
-                    Write-Warning "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore"
+                    Write-Verbose "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore" -Verbose
                     continue
                 }
             }
         }
         catch {
-            Write-Output "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore"
+            Write-Verbose "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore" -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -81,10 +81,15 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         # Restore the assignments
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/assign" -ErrorAction Stop
-            Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored Administrative Template Assignment(s)"
+            [PSCustomObject]@{
+                "Action" = "Restore Assignments"
+                "Type"   = "Administrative Template Assignments"
+                "Name"   = $groupPolicyConfigurationObject.displayName
+                "Path"   = "Administrative Templates\Assignments\$($groupPolicyConfiguration.Name)"
+            }
         }
         catch {
-            Write-Output "$($groupPolicyConfigurationObject.displayName) - Failed to restore Administrative Template Assignment(s)"
+            Write-Verbose "$($groupPolicyConfigurationObject.displayName) - Failed to restore Administrative Template Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

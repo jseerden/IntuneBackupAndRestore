@@ -66,13 +66,13 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
             else {
                 $deviceConfigurationObject = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceConfiguration.BaseName)"
                 if (-not ($deviceConfigurationObject)) {
-                    Write-Warning "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore"
+                    Write-Verbose "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore" -Verbose
                     continue
                 }
             }
         }
         catch {
-            Write-Output "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore"
+            Write-Verbose "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore" -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -80,10 +80,15 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         # Restore the assignments
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations/$($deviceConfigurationObject.id)/assign" -ErrorAction Stop
-            Write-Output "$($deviceConfigurationObject.displayName) - Successfully restored Device Configuration Assignment(s)"
+            [PSCustomObject]@{
+                "Action" = "Restore Assignments"
+                "Type"   = "Device Configuration Assignments"
+                "Name"   = $deviceConfigurationObject.displayName
+                "Path"   = "Device Configurations\Assignments\$($deviceConfiguration.Name)"
+            }
         }
         catch {
-            Write-Output "$($deviceConfigurationObject.displayName) - Failed to restore Device Configuration Assignment(s)"
+            Write-Verbose "$($deviceConfigurationObject.displayName) - Failed to restore Device Configuration Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

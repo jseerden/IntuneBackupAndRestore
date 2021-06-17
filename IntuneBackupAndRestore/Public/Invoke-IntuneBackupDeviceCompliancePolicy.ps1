@@ -38,8 +38,14 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
     $deviceCompliancePolicies = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages
     
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        Write-Output "Backing Up - Device Compliance Policy: $($deviceCompliancePolicy.displayName)"
         $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $deviceCompliancePolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Device Compliance Policy"
+            "Name"   = $deviceCompliancePolicy.displayName
+            "Path"   = "Device Compliance Policies\$fileName.json"
+        }
     }
 }

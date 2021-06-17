@@ -38,8 +38,14 @@ function Invoke-IntuneBackupDeviceConfiguration {
     $deviceConfigurations = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages
 
     foreach ($deviceConfiguration in $deviceConfigurations) {
-        Write-Output "Backing Up - Device Configuration: $($deviceConfiguration.displayName)"
         $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $deviceConfiguration | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Configurations\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Device Configuration"
+            "Name"   = $deviceConfiguration.displayName
+            "Path"   = "Device Configurations\$fileName.json"
+        }
     }
 }

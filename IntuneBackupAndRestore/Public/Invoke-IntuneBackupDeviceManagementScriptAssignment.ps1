@@ -41,9 +41,15 @@ function Invoke-IntuneBackupDeviceManagementScriptAssignment {
         $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScript.id)/assignments" | Get-MSGraphAllPages
         
         if ($assignments) {
-            Write-Output "Backing Up - Device Management Script - Assignments: $($deviceManagementScript.displayName)"
             $fileName = ($deviceManagementScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\Assignments\$fileName.json"
+
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "Device Management Script Assignments"
+                "Name"   = $deviceManagementScript.displayName
+                "Path"   = "Device Management Scripts\Assignments\$fileName.json"
+            }
         }
     }
 }

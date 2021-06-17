@@ -35,15 +35,20 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
         $deviceManagementIntentContent = Get-Content -LiteralPath $deviceManagementIntent.FullName -Raw
         $deviceManagementIntentDisplayName = ($deviceManagementIntentContent | ConvertFrom-Json).displayName
         $templateId = $deviceManagementIntent.Name.Split("_")[0]
-        $templateDisplayName = $deviceManagementIntent.Name.Split("_")[1]
+        $templateDisplayName = ($deviceManagementIntent).DirectoryName.Split('\')[-1]
 
         # Restore the device management intent
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/templates/$($templateId)/createInstance" -Content $deviceManagementIntentContent.toString() -ErrorAction Stop
-            Write-Output "$deviceManagementIntentDisplayName - Successfully restored Device Management Intent ($templateDisplayName)"
+            [PSCustomObject]@{
+                "Action" = "Restore Config"
+                "Type"   = "Device Management Intent"
+                "Name"   = $deviceManagementIntentDisplayName
+                "Path"   = "Device Management Intents\$($deviceManagementIntent.Name)"
+            }
         }
         catch {
-            Write-Output "$deviceManagementIntentDisplayName - Failed to restore Device Management Intent ($templateDisplayName)"
+            Write-Verbose "$deviceManagementIntentDisplayName - Failed to restore Device Management Intent ($templateDisplayName)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

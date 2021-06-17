@@ -38,8 +38,14 @@ function Invoke-IntuneBackupAppProtectionPolicy {
     $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        Write-Output "Backing Up - App Protection Policy: $($appProtectionPolicy.displayName)"
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "App Protection Policy"
+            "Name"   = $appProtectionPolicy.displayName
+            "Path"   = "App Protection Policies\$fileName.json"
+        }
     }
 }

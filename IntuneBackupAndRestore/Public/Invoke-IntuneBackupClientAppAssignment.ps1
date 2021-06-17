@@ -40,9 +40,15 @@ function Invoke-IntuneBackupClientAppAssignment {
     foreach ($clientApp in $clientApps) {
         $assignments = Get-DeviceAppManagement_MobileApps_Assignments -MobileAppId $clientApp.id 
         if ($assignments) {
-            Write-Output "Backing Up - Client App - Assignments: $($clientApp.displayName)"
             $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "Client App Assignments"
+                "Name"   = $clientApp.displayName
+                "Path"   = "Client Apps\Assignments\$fileName.json"
+            }
         }
     }
 }

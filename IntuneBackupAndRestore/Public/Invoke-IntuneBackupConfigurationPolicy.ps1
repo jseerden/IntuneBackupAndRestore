@@ -47,8 +47,14 @@ function Invoke-IntuneBackupConfigurationPolicy {
             $configurationPolicy.Settings = $settings
         }
         
-        Write-Output "Backing Up - Settings Catalog Policy: $($configurationPolicy.name)"
         $fileName = ($configurationPolicy.name).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $configurationPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Settings Catalog\$fileName.json"
+
+        [PSCustomObject]@{
+            "Action" = "Backup"
+            "Type"   = "Settings Catalog"
+            "Name"   = $configurationPolicy.name
+            "Path"   = "Settings Catalog\$fileName.json"
+        }
     }
 }

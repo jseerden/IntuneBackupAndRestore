@@ -67,13 +67,13 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
             else {
                 $deviceCompliancePolicyObject = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceCompliancePolicy.BaseName)"
                 if (-not ($deviceCompliancePolicyObject)) {
-                    Write-Warning "Error retrieving Intune Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
+                    Write-Verbose "Error retrieving Intune Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore" -Verbose
                     continue
                 }
             }
         }
         catch {
-            Write-Output "Error retrieving Intune Device Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore"
+            Write-Verbose "Error retrieving Intune Device Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore" -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
@@ -81,10 +81,15 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         # Restore the assignments
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicyObject.id)/assign" -ErrorAction Stop
-            Write-Output "$($deviceCompliancePolicyObject.displayName) - Successfully restored Device Compliance Policy Assignment(s)"
+            [PSCustomObject]@{
+                "Action" = "Restore Assignments"
+                "Type"   = "Device Compliance Policy Assignments"
+                "Name"   = $deviceCompliancePolicyObject.displayName
+                "Path"   = "Device Compliance Policies\Assignments\$($deviceCompliancePolicy.Name)"
+            }
         }
         catch {
-            Write-Output "$($deviceCompliancePolicyObject.displayName) - Failed to restore Device Compliance Policy Assignment(s)"
+            Write-Verbose "$($deviceCompliancePolicyObject.displayName) - Failed to restore Device Compliance Policy Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }
