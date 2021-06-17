@@ -57,7 +57,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         }
 
         # Convert the PowerShell object to JSON
-        $requestBody = $requestBody | ConvertTo-Json -Depth 3
+        $requestBody = $requestBody | ConvertTo-Json -Depth 100
 
         # Get the Device Management Script we are restoring the assignments for
         try {

@@ -67,7 +67,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
         }
 
         # Convert the PowerShell object to JSON
-        $requestBody = $requestBody | ConvertTo-Json -Depth 5
+        $requestBody = $requestBody | ConvertTo-Json -Depth 100
 
         # Get the Client App we are restoring the assignments for
         try {

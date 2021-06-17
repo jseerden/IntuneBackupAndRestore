@@ -40,6 +40,6 @@ function Invoke-IntuneBackupDeviceConfiguration {
     foreach ($deviceConfiguration in $deviceConfigurations) {
         Write-Output "Backing Up - Device Configuration: $($deviceConfiguration.displayName)"
         $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $deviceConfiguration | ConvertTo-Json -Depth 5 | Out-File -LiteralPath "$path\Device Configurations\$fileName.json"
+        $deviceConfiguration | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Configurations\$fileName.json"
     }
 }

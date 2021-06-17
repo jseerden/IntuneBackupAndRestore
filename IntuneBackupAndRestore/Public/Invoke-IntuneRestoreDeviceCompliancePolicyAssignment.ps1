@@ -57,7 +57,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         }
 
         # Convert the PowerShell object to JSON
-        $requestBody = $requestBody | ConvertTo-Json -Depth 3
+        $requestBody = $requestBody | ConvertTo-Json -Depth 100
 
         # Get the Device Compliance Policy we are restoring the assignments for
         try {

@@ -47,7 +47,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
             Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored base Group Policy Configuration"
 
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
-                $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 5).toString() -ErrorAction Stop
+                $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
                 $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
                 Write-Output "$($groupPolicyConfigurationObject.displayName) - Successfully restored '$($groupPolicyDefinition.displayName)' Setting for Group Policy Configuration"
             }
