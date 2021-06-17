@@ -123,7 +123,7 @@ Invoke-IntuneRestoreDeviceCompliancePolicy -Path C:\temp\IntuneBackup
 ```
 
 ```powershell
-Invoke-IntuneRestoreDeviceCompliancePolicyAssignments -Path C:\temp\IntuneBackup
+Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path C:\temp\IntuneBackup
 ```
 
 ### Example 05 - Restore Only Intune Device Configurations
@@ -132,7 +132,7 @@ Invoke-IntuneRestoreDeviceConfiguration -Path C:\temp\IntuneBackup
 ```
 
 ```powershell
-Invoke-IntuneRestoreDeviceConfigurationAssignments -Path C:\temp\IntuneBackup
+Invoke-IntuneRestoreDeviceConfigurationAssignment -Path C:\temp\IntuneBackup
 ```
 
 ### Example 06 - Backup Only Intune Endpoint Security Configurations
