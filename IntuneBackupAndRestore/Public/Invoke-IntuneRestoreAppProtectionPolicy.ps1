@@ -58,7 +58,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/managedAppPolicies" -ErrorAction Stop
 
             [PSCustomObject]@{
-                "Action" = "Restore Config"
+                "Action" = "Restore"
                 "Type"   = "App Protection Policy"
                 "Name"   = $appProtectionPolicyDisplayName
                 "Path"   = "App Protection Policies\$($appProtectionPolicy.Name)"

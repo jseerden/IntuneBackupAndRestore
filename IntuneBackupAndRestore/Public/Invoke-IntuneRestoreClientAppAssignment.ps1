@@ -92,7 +92,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/mobileApps/$($clientAppObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Assignments"
+                "Action" = "Restore"
                 "Type"   = "Client App Assignments"
                 "Name"   = $clientAppObject.displayName
                 "Path"   = "Client Apps\Assignments\$($clientApp.Name)"

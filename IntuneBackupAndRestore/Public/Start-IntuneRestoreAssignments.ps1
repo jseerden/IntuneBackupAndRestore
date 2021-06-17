@@ -30,12 +30,13 @@ function Start-IntuneRestoreAssignments() {
     )
 
     [PSCustomObject]@{
-        "Action" = "Restore Config"
+        "Action" = "Restore"
         "Type"   = "Intune Backup and Restore Action"
         "Name"   = "IntuneBackupAndRestore - Start Intune Restore Assignments"
         "Path"   = $Path
     }
 
+    Invoke-IntuneRestoreConfigurationPolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreClientAppAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById

@@ -82,7 +82,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScriptObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Assignments"
+                "Action" = "Restore"
                 "Type"   = "Device Management Script Assignments"
                 "Name"   = $deviceManagementScriptObject.displayName
                 "Path"   = "Device Management Scripts\Assignments\$($deviceManagementScript.Name)"

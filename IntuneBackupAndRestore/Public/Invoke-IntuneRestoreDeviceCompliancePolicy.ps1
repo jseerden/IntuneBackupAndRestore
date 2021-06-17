@@ -64,7 +64,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Config"
+                "Action" = "Restore"
                 "Type"   = "Device Compliance Policy"
                 "Name"   = $deviceCompliancePolicyDisplayName
                 "Path"   = "Device Compliance Policies\$($deviceCompliancePolicy.Name)"

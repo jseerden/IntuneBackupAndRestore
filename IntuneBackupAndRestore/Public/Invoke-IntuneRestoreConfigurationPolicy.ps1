@@ -42,7 +42,7 @@ function Invoke-IntuneRestoreConfigurationPolicy {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/configurationPolicies" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Config"
+                "Action" = "Restore"
                 "Type"   = "Settings Catalog"
                 "Name"   = $configurationPolicy.FullName
                 "Path"   = "Settings Catalog\$($configurationPolicy.Name)"

@@ -42,7 +42,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
             }
             $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations" -Content ($groupPolicyConfigurationRequestBody | ConvertTo-Json).toString() -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Config"
+                "Action" = "Restore"
                 "Type"   = "Administrative Template"
                 "Name"   = $groupPolicyConfigurationObject.displayName
                 "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
@@ -52,7 +52,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
                 $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
                 $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
                 [PSCustomObject]@{
-                    "Action" = "Restore Config"
+                    "Action" = "Restore"
                     "Type"   = "Administrative Template Setting"
                     "Name"   = $groupPolicyDefinition.displayName
                     "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"

@@ -82,7 +82,7 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Assignments"
+                "Action" = "Restore"
                 "Type"   = "Administrative Template Assignments"
                 "Name"   = $groupPolicyConfigurationObject.displayName
                 "Path"   = "Administrative Templates\Assignments\$($groupPolicyConfiguration.Name)"

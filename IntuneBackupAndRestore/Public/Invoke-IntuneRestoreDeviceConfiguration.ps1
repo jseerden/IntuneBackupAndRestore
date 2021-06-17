@@ -57,7 +57,7 @@ function Invoke-IntuneRestoreDeviceConfiguration {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Config"
+                "Action" = "Restore"
                 "Type"   = "Device Configuration"
                 "Name"   = $deviceConfigurationDisplayName
                 "Path"   = "Device Configurations\$($deviceConfiguration.Name)"

@@ -97,7 +97,7 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
             }
 
             [PSCustomObject]@{
-                "Action" = "Restore Assignments"
+                "Action" = "Restore"
                 "Type"   = "App Protection Policy Assignments"
                 "Name"   = $appProtectionPolicyName
                 "Path"   = "App Protection Policies\Assignments\$($appProtectionPolicy.Name)"

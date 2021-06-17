@@ -81,7 +81,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         try {
             $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations/$($deviceConfigurationObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
-                "Action" = "Restore Assignments"
+                "Action" = "Restore"
                 "Type"   = "Device Configuration Assignments"
                 "Name"   = $deviceConfigurationObject.displayName
                 "Path"   = "Device Configurations\Assignments\$($deviceConfiguration.Name)"
