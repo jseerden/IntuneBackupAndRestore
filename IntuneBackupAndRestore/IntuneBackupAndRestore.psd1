@@ -12,7 +12,7 @@
 RootModule = 'IntuneBackupAndRestore.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.0.0'
+ModuleVersion = '3.0.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

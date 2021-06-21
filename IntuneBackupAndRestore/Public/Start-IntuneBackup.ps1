@@ -25,7 +25,7 @@ function Start-IntuneBackup() {
     )
 
     [PSCustomObject]@{
-        "Action" = "Restore"
+        "Action" = "Backup"
         "Type"   = "Intune Backup and Restore Action"
         "Name"   = "IntuneBackupAndRestore - Start Intune Backup Config and Assignments"
         "Path"   = $Path

@@ -13,6 +13,7 @@ Intune Configuration is backed up as (json) files in a given directory.
 ```powershell
 # Install IntuneBackupAndRestore from the PowerShell Gallery
 Install-Module -Name IntuneBackupAndRestore
+```
 
 ## Updating IntuneBackupAndRestore
 
