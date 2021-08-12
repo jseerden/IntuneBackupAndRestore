@@ -39,6 +39,34 @@ function Invoke-IntuneBackupDeviceConfiguration {
 
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+
+        # If it's a custom configuration, decrypt the OmaSetting to a Plain Text Value (required for import)
+        if ($deviceConfiguration.'@odata.type' -eq '#microsoft.graph.windows10CustomConfiguration') {
+            # Create an empty array for the unencrypted OMA settings.
+            $newOmaSettings = @()
+            foreach ($omaSetting in $deviceConfiguration.omaSettings) {
+                # Define a new 'unencrypted' OMA Setting
+                $newOmaSetting = @{}
+                $newOmaSetting.'@odata.type' = $omaSetting.'@odata.type'
+                $newOmaSetting.displayName = $omaSetting.displayName
+                $newOmaSetting.description = $omaSetting.description
+                $newOmaSetting.omaUri = $omaSetting.omaUri
+                $newOmaSetting.value = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MSGraphAllPages
+                $newOmaSetting.isEncrypted = $false
+                $newOmaSetting.secretReferenceValueId = $null
+
+                # Add the unencrypted OMA Setting to the Array
+                $newOmaSettings += $newOmaSetting
+            }
+
+            # Remove all encrypted OMA Settings from the Device Configuration
+            $deviceConfiguration.omaSettings = @()
+
+            # Add the unencrypted OMA Settings from the Device Configuration
+            $deviceConfiguration.omaSettings += $newOmaSettings
+        }
+
+        # Export the Device Configuration Profile
         $deviceConfiguration | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Configurations\$fileName.json"
 
         [PSCustomObject]@{
