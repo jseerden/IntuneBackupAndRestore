@@ -36,12 +36,13 @@ function Invoke-IntuneBackupDeviceConfiguration {
 
     # Get all device configurations
     $deviceConfigurations = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages
+    
 
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
-        # If it's a custom configuration, decrypt the OmaSetting to a Plain Text Value (required for import)
-        if ($deviceConfiguration.'@odata.type' -eq '#microsoft.graph.windows10CustomConfiguration') {
+        # If it's a custom configuration, check if the device configuration contains encrypted OMA settings, then decrypt the OmaSettings to a Plain Text Value (required for import)
+        if (($deviceConfiguration.'@odata.type' -eq '#microsoft.graph.windows10CustomConfiguration') -and ($deviceConfiguration.omaSettings | Where-Object { $_.isEncrypted -contains $true } )) {
             # Create an empty array for the unencrypted OMA settings.
             $newOmaSettings = @()
             foreach ($omaSetting in $deviceConfiguration.omaSettings) {
