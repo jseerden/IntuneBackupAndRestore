@@ -62,8 +62,11 @@ function Compare-IntuneBackupFile() {
                 }
             }
             else {
-                if ($($_.Value).GetType().Name -eq 'PSCustomObject') {
+                if (($_.Value).GetType().Name -eq 'PSCustomObject') {
                     Invoke-FlattenBackupObject -PSCustomObject $_.Value -KeyName $_.Name
+                }
+                elseif (($_.Value).GetType().Name -eq 'Object[]') {
+                    Invoke-FlattenBackupObject -PSCustomObject $_.Value.GetEnumerator() -KeyName $_.Name
                 }
                 else {
                     if ($KeyName) {

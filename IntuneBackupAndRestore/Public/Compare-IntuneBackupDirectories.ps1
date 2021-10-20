@@ -71,7 +71,7 @@
 
 			Write-Verbose "Checking for changes in the file '$referenceJSONFile'"
 
-			$changes = Compare-IntuneBackupFile -ReferenceFilePath $file.FileName -DifferenceFilePath $difFileFound.FullPath -ErrorAction silentlycontinue
+			$changes = Compare-IntuneBackupFile -ReferenceFilePath $file.FileName -DifferenceFilePath $difFileFound.FullPath -ErrorAction "Continue"
 			if ($changes) {
 				Write-Output "There was a change in the file, '$referenceJSONFile' which is located at $($difFileFound.fullpath)"
 				$changes | Format-Table -AutoSize
