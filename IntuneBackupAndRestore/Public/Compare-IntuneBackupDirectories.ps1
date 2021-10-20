@@ -48,7 +48,7 @@
 			$difFileFound = $differenceFiles | Where-Object { $_.FileName -eq $referenceJSONFile }
 			
 			if (($difFileFound.FileName).count -gt 1) {
-				$referenceJSONFile = ($file.Filename).split("\") | Select-Object -last 2
+				$referenceJSONFile = (($file.Filename).split("\") | Select-Object -last 2) -join "\"
 				$referenceJSONFileParent = ($file.FileName).split("\") | Select-Object -Last 2
 				$referenceJSONFileParentPath = "$(($referenceJSONFileParent).item(0))\$(($referenceJSONFileParent).item(1))"
 				Write-Verbose "Multiple difference files found that were matching the reference file"
