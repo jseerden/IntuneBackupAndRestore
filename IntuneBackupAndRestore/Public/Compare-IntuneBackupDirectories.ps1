@@ -77,5 +77,38 @@
 				$changes | Format-Table -AutoSize
 			}
 		}
+
+		# search for new settings that doesn't exist in first backup
+		foreach ($file in $differenceFiles) {
+			$differenceJSONFile = $file.Filename
+
+			Write-Verbose "The difference file is '$differenceJSONFile'"
+			Write-Verbose "The difference file path is $($file.FullPath)"
+
+			$difFileFound = $referenceFiles | Where-Object { (($_.FileName).split("\") | Select-Object -Last 1) -eq $differenceJSONFile }
+
+			if (($difFileFound.FileName).count -gt 1) {
+				$differenceJSONFileParent = ($file.FullPath).split("\") | Select-Object -Last 2
+				$differenceJSONFileParentPath = $differenceJSONFileParent -join "\"
+				Write-Verbose "Multiple reference files found that were matching the difference file"
+				$difFileFound = $referenceFiles | Where-Object { $_.FileName -like "*$differenceJSONFileParentPath*" }
+				if (($difFileFound.FileName).count -gt 1) {
+					# filter wasn't precise enough to uniquely identify the correct difference file
+					# try to use last three parts of the file path instead of two
+					$differenceJSONFileParent = ($file.FullPath).split("\") | Select-Object -Last 3
+					$differenceJSONFileParentPath = $differenceJSONFileParent -join "\"
+					Write-Verbose "Multiple reference files found again that were matching the difference file"
+					$difFileFound = $referenceFiles | Where-Object { $_.FileName -like "*$differenceJSONFileParentPath*" }
+					if (($difFileFound.FileName).count -gt 1) {
+						Write-Warning "Unable to uniquely identify difference file. Skipping $differenceJSONFile"
+						continue
+					}
+				}
+			}
+
+			if (!$difFileFound) {
+				Write-Output "There is completely new setting, '$differenceJSONFile' which is located at $($file.FullPath)"
+			}
+		}
 	}
 }
