@@ -46,13 +46,17 @@ function Invoke-IntuneBackupDeviceConfiguration {
             # Create an empty array for the unencrypted OMA settings.
             $newOmaSettings = @()
             foreach ($omaSetting in $deviceConfiguration.omaSettings) {
+                # Check if this particular setting is encrypted, and get the plaintext only if necessary
+                if ($omaSetting.isEncrypted) {
+                    $omaSettingValue = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MSGraphAllPages
+                }
                 # Define a new 'unencrypted' OMA Setting
                 $newOmaSetting = @{}
                 $newOmaSetting.'@odata.type' = $omaSetting.'@odata.type'
                 $newOmaSetting.displayName = $omaSetting.displayName
                 $newOmaSetting.description = $omaSetting.description
                 $newOmaSetting.omaUri = $omaSetting.omaUri
-                $newOmaSetting.value = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MSGraphAllPages
+                $newOmaSetting.value = $omaSettingValue
                 $newOmaSetting.isEncrypted = $false
                 $newOmaSetting.secretReferenceValueId = $null
 
