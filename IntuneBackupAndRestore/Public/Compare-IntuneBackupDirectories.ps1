@@ -107,7 +107,7 @@
 			}
 
 			if (!$difFileFound) {
-				Write-Output "There is completely new setting, '$differenceJSONFile' which is located at $($file.FullPath)"
+				Write-Output "There is a new file. '$differenceJSONFile' which is located at $($file.FullPath)"
 			}
 		}
 	}
