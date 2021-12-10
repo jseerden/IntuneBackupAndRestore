@@ -62,8 +62,11 @@ function Compare-IntuneBackupFile() {
                 }
             }
             else {
-                if ($($_.Value).GetType().Name -eq 'PSCustomObject') {
+                if (($_.Value).GetType().Name -eq 'PSCustomObject') {
                     Invoke-FlattenBackupObject -PSCustomObject $_.Value -KeyName $_.Name
+                }
+                elseif (($_.Value).GetType().Name -eq 'Object[]') {
+                    Invoke-FlattenBackupObject -PSCustomObject $_.Value.GetEnumerator() -KeyName $_.Name
                 }
                 else {
                     if ($KeyName) {
@@ -99,7 +102,7 @@ function Compare-IntuneBackupFile() {
         $flattenLatestBackupObject = New-Object -TypeName PSObject
         for ($i=0; $i -le $flattenLatestBackupArray.Length; $i++) {
             foreach ($property in $flattenLatestBackupArray[$i].PSObject.Properties) {
-                $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+                $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value -Force
             }
         }
     }
