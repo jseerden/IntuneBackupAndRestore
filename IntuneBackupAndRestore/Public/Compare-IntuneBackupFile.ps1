@@ -102,7 +102,7 @@ function Compare-IntuneBackupFile() {
         $flattenLatestBackupObject = New-Object -TypeName PSObject
         for ($i=0; $i -le $flattenLatestBackupArray.Length; $i++) {
             foreach ($property in $flattenLatestBackupArray[$i].PSObject.Properties) {
-                $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value
+                $flattenLatestBackupObject | Add-Member -NotePropertyName $property.Name -NotePropertyValue $property.Value -Force
             }
         }
     }
