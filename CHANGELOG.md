@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2021-12-10
+- Added support for backing up Proactive Remediations. Special thanks to @ztrhgf and @Kosipeich
+- Added support for backing up Proactive Remediation Assignments. Special thanks to @ztrhgf and @Kosipeich
+- Added additional improvements for Comparing Files and Directories. Special thanks to @ztrhgf
+- Added an additional check for encrypted OMA-URI settings.
+
 ## [3.1.1] - 2021-08-19
 - Added check if Custom OMA-URI is encrypted before attempting to decrypt.
 
