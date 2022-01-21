@@ -41,7 +41,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
         # Restore the Group Policy Configuration
         try {
             $groupPolicyConfigurationObject = $null
-            $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/" -ErrorAction Stop | Where-Object{$_.displayName -eq $groupPolicyConfiguration.BaseName}
+            $groupPolicyConfigurationObject = (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/" -ErrorAction Stop).value | Where-Object{$_.displayName -eq $groupPolicyConfiguration.BaseName}
             if(!$groupPolicyConfigurationObject -or !$RestoreById){
                 $groupPolicyConfigurationRequestBody = @{
                     displayName = $groupPolicyConfiguration.BaseName

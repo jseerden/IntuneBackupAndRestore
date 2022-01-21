@@ -37,10 +37,10 @@ function Start-IntuneRestoreConfig() {
     }
 
     Invoke-IntuneRestoreConfigurationPolicy -Path $Path -RestoreById $RestoreById
-    Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path #-RestoreById $RestoreById
-    Invoke-IntuneRestoreDeviceConfiguration -Path $Path #-RestoreById $RestoreById
-    Invoke-IntuneRestoreDeviceManagementScript -Path $Path #-RestoreById $RestoreById
-    Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path #-RestoreById $RestoreById
-    Invoke-IntuneRestoreDeviceManagementIntent -Path $Path #-RestoreById $RestoreById
-    Invoke-IntuneRestoreAppProtectionPolicy -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceConfiguration -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceManagementScript -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceManagementIntent -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreAppProtectionPolicy -Path $Path -RestoreById $RestoreById
 }
