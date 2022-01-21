@@ -16,12 +16,17 @@ function Start-IntuneRestoreConfig() {
     Requires the MSGraphFunctions PowerShell Module
 
     Connect to MSGraph first, using the 'Connect-Graph' cmdlet.
+    
+    Set $RestoreById to $true, if the Configuration itself was not restored from backup. Set $RestoreById to $false if the configurations have been re-created (new unique ID's).
     #>
     
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path
+        [string]$Path,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false
     )
 
     [PSCustomObject]@{
@@ -31,11 +36,11 @@ function Start-IntuneRestoreConfig() {
         "Path"   = $Path
     }
 
-    Invoke-IntuneRestoreConfigurationPolicy -Path $Path
-    Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path
-    Invoke-IntuneRestoreDeviceConfiguration -Path $Path
-    Invoke-IntuneRestoreDeviceManagementScript -Path $Path
-    Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path
-    Invoke-IntuneRestoreDeviceManagementIntent -Path $Path
-    Invoke-IntuneRestoreAppProtectionPolicy -Path $Path
+    Invoke-IntuneRestoreConfigurationPolicy -Path $Path -RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceConfiguration -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceManagementScript -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreDeviceManagementIntent -Path $Path #-RestoreById $RestoreById
+    Invoke-IntuneRestoreAppProtectionPolicy -Path $Path #-RestoreById $RestoreById
 }

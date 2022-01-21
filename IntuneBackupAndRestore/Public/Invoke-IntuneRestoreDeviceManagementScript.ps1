@@ -19,6 +19,9 @@ function Invoke-IntuneRestoreDeviceManagementScript {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
@@ -41,7 +44,11 @@ function Invoke-IntuneRestoreDeviceManagementScript {
 
         # Restore the device management script
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts" -ErrorAction Stop
+            if($RestoreById)
+            { $null = Invoke-MSGraphRequest -HttpMethod PUT -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScriptContent.id)" -ErrorAction Stop }
+            else 
+            { $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts" -ErrorAction Stop }
+            
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Script"

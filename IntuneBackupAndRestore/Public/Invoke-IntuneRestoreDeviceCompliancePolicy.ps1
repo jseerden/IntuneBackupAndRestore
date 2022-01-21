@@ -19,6 +19,9 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
@@ -62,7 +65,11 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
 
         # Restore the Device Compliance Policy
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
+            if($RestoreById)
+            { $null = Invoke-MSGraphRequest -HttpMethod PUT -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicyContent.id)" -ErrorAction Stop }
+            else 
+            { $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop}
+            
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Compliance Policy"

@@ -19,6 +19,9 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
@@ -37,10 +40,14 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
         
         # Restore the Group Policy Configuration
         try {
-            $groupPolicyConfigurationRequestBody = @{
-                displayName = $groupPolicyConfiguration.BaseName
+            $groupPolicyConfigurationObject = $null
+            $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/" -ErrorAction Stop | Where-Object{$_.displayName -eq $groupPolicyConfiguration.BaseName}
+            if(!$groupPolicyConfigurationObject -or !$RestoreById){
+                $groupPolicyConfigurationRequestBody = @{
+                    displayName = $groupPolicyConfiguration.BaseName
+                }
+                $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations" -Content ($groupPolicyConfigurationRequestBody | ConvertTo-Json).toString() -ErrorAction Stop
             }
-            $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations" -Content ($groupPolicyConfigurationRequestBody | ConvertTo-Json).toString() -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Administrative Template"
@@ -49,7 +56,11 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
             }
 
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
-                $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
+                if($RestoreById)
+                { $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod PUT -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues"  -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop }
+                else 
+                { $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop }
+ 
                 $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
                 [PSCustomObject]@{
                     "Action" = "Restore"

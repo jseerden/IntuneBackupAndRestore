@@ -19,6 +19,9 @@ function Invoke-IntuneRestoreDeviceConfiguration {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
@@ -55,7 +58,11 @@ function Invoke-IntuneRestoreDeviceConfiguration {
 
         # Restore the device configuration
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations" -ErrorAction Stop
+            if($RestoreById)
+            { $null = Invoke-MSGraphRequest -HttpMethod PUT -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations/$($deviceConfigurations.id)" -ErrorAction Stop }
+            else 
+            { $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations" -ErrorAction Stop}
+            
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Configuration"
