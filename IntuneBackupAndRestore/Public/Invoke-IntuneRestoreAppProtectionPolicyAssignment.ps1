@@ -37,7 +37,7 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
     }
 
     # Get all policies with assignments
-    $appProtectionPolicies = Get-ChildItem -Path "$Path\App Protection Policies\Assignments"
+    $appProtectionPolicies = Get-ChildItem -Path "$Path\App Protection Policies\Assignments" -Filter *.json
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         $appProtectionPolicyAssignments = Get-Content -LiteralPath $appProtectionPolicy.FullName | ConvertFrom-Json
         $appProtectionPolicyId = ($appProtectionPolicy.BaseName -split " - ")[0]

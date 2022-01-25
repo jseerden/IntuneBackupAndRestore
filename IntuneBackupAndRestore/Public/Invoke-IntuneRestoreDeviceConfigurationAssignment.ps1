@@ -39,7 +39,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
     }
 
     # Get all policies with assignments
-    $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments"
+    $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments" -Filter *.json
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $deviceConfigurationAssignments = Get-Content -LiteralPath $deviceConfiguration.FullName | ConvertFrom-Json
 

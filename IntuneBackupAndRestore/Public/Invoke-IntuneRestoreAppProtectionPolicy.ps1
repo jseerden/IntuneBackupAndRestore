@@ -33,7 +33,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
     }
 
     # Get all App Protection Policies
-    $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File
+    $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File -Filter *.json
     
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         $appProtectionPolicyContent = Get-Content -LiteralPath $appProtectionPolicy.FullName -Raw
@@ -43,7 +43,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
         $requestBodyObject = $appProtectionPolicyContent | ConvertFrom-Json
         # Set SupportsScopeTags to $false, because $true currently returns an HTTP Status 400 Bad Request error.
         if ($requestBodyObject.supportsScopeTags) {
-            $requestBodyObject.supportsScopeTags = $false
+            #$requestBodyObject.supportsScopeTags = $false
         }
 
         $requestBodyObject.PSObject.Properties | Foreach-Object {
@@ -54,12 +54,12 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
             }
         }
 
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 100
+        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty createdDateTime, lastModifiedDateTime, version | ConvertTo-Json -Depth 100
 
         # Restore the App Protection Policy
         try {
             if($RestoreById)
-            { $null = Invoke-MSGraphRequest -HttpMethod PUT -Content $requestBody.toString() -Url "deviceManagement/managedAppPolicies/$($appProtectionPolicyContent.id)" -ErrorAction Stop }
+            { $null = Invoke-MSGraphRequest -HttpMethod PATCH -Content $requestBody.toString() -Url "deviceAppManagement/managedAppPolicies/$($requestBodyObject.id)" -ErrorAction Stop }
             else 
             { $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/managedAppPolicies" -ErrorAction Stop }
             

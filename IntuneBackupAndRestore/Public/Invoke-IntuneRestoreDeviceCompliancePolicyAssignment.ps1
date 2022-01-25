@@ -39,7 +39,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
     }
 
     # Get all policies with assignments
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\Assignments"
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\Assignments" -Filter *.json
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $deviceCompliancePolicyAssignments = Get-Content -LiteralPath $deviceCompliancePolicy.FullName | ConvertFrom-Json
         $deviceCompliancePolicyId = ($deviceCompliancePolicyAssignments[0]).id.Split("_")[0]

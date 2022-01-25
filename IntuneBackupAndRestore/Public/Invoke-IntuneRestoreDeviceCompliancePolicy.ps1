@@ -33,7 +33,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File -Filter *.json
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName -Raw
         $deviceCompliancePolicyDisplayName = ($deviceCompliancePolicyContent | ConvertFrom-Json).displayName
@@ -42,31 +42,10 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         $requestBodyObject = $deviceCompliancePolicyContent | ConvertFrom-Json
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json -Depth 100
 
-        # If missing, adds a default required block scheduled action to the compliance policy request body, as this value is not returned when retrieving compliance policies.
-        $requestBodyObject = $requestBody | ConvertFrom-Json
-        if (-not ($requestBodyObject.scheduledActionsForRule)) {
-            $scheduledActionsForRule = @(
-                @{
-                    ruleName = "PasswordRequired"
-                    scheduledActionConfigurations = @(
-                        @{
-                            actionType = "block"
-                            gracePeriodHours = 0
-                            notificationTemplateId = ""
-                        }
-                    )
-                }
-            )
-            $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
-            
-            # Update the request body reflecting the changes
-            $requestBody = $requestBodyObject | ConvertTo-Json -Depth 100
-        }
-
         # Restore the Device Compliance Policy
         try {
             if($RestoreById)
-            { $null = Invoke-MSGraphRequest -HttpMethod PUT -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicyContent.id)" -ErrorAction Stop }
+            { $null = Invoke-MSGraphRequest -HttpMethod PATCH -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies/$(($deviceCompliancePolicyContent | ConvertFrom-Json).id)" -ErrorAction Stop }
             else 
             { $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop}
             

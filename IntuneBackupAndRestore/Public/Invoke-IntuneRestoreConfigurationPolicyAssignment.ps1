@@ -39,7 +39,7 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
     }
 
     # Get all policies with assignments
-    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog\Assignments"
+    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog\Assignments" -Filter *.json
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyAssignments = Get-Content -LiteralPath $configurationPolicy.FullName | ConvertFrom-Json
         $configurationPolicyId = ($configurationPolicyAssignments[0]).id.Split("_")[0]

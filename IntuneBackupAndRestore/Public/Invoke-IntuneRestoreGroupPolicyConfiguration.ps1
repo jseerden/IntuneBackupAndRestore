@@ -33,7 +33,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
     }
 
     # Get all Group Policy Configurations
-    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File
+    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File -Filter *.json
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json
@@ -41,6 +41,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
         # Restore the Group Policy Configuration
         try {
             $groupPolicyConfigurationObject = $null
+            # Check if Group Policy Configuration is already deployed to tenant.
             $groupPolicyConfigurationObject = (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/" -ErrorAction Stop).value | Where-Object{$_.displayName -eq $groupPolicyConfiguration.BaseName}
             if(!$groupPolicyConfigurationObject -or !$RestoreById){
                 $groupPolicyConfigurationRequestBody = @{
@@ -55,9 +56,24 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
                 "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
             }
 
+            if($RestoreById)
+            { 
+                # Delete current definitions from the group policy configuration
+                $definitionValues = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues"
+                if(![string]::IsNullOrEmpty($definitionValues.value.Id)){
+                    $deleteDefinitionValuesContent = '{ "added": [ ], "updated": [ ], "deletedIds": [ ] }' | ConvertFrom-Json
+                    $deleteDefinitionValuesContent.deletedIds = $definitionValues.value.Id
+                    Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/updateDefinitionValues"  -Content ($deleteDefinitionValuesContent | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
+                }
+            }
+
+
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
                 if($RestoreById)
-                { $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod PUT -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues"  -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop }
+                { 
+                    # Add new/updated definitions to the group policy configuration
+                    $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues"  -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
+                }
                 else 
                 { $groupPolicyDefinitionValue = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Content ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop }
  
