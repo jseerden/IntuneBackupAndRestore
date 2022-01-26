@@ -42,6 +42,27 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         $requestBodyObject = $deviceCompliancePolicyContent | ConvertFrom-Json
         $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json -Depth 100
 
+        # If missing, adds a default required block scheduled action to the compliance policy request body, as this value is not returned when retrieving compliance policies.
+        $requestBodyObject = $requestBody | ConvertFrom-Json
+        if (-not ($requestBodyObject.scheduledActionsForRule) -and -not $RestoreById) {
+            $scheduledActionsForRule = @(
+                @{
+                    ruleName = "PasswordRequired"
+                    scheduledActionConfigurations = @(
+                        @{
+                            actionType = "block"
+                            gracePeriodHours = 0
+                            notificationTemplateId = ""
+                        }
+                    )
+                }
+            )
+            $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
+            
+            # Update the request body reflecting the changes
+            $requestBody = $requestBodyObject | ConvertTo-Json -Depth 100
+        }
+            
         # Restore the Device Compliance Policy
         try {
             if($RestoreById)
