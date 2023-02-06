@@ -58,5 +58,3 @@
         $ErrResp
     }
 }
-
-Invoke-IntuneRestoreClientApps -Path C:\IntuneBackup\
