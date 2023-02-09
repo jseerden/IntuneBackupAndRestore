@@ -23,10 +23,14 @@ function Invoke-IntuneBackupDeviceManagementIntent {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -35,12 +39,12 @@ function Invoke-IntuneBackupDeviceManagementIntent {
     }
 
     Write-Verbose "Requesting Intents"
-    $intents = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/intents" | Get-MSGraphAllPages
+    $intents = Get-MgDeviceManagementIntent -all
 
     foreach ($intent in $intents) {
         # Get the corresponding Device Management Template
         Write-Verbose "Requesting Template"
-        $template = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/templates/$($intent.templateId)"
+        $template = Get-MgDeviceManagementTemplate -DeviceManagementTemplateId $($intent.templateId) 
         $templateDisplayName = ($template.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
         if (-not (Test-Path "$Path\Device Management Intents\$templateDisplayName")) {
@@ -49,13 +53,21 @@ function Invoke-IntuneBackupDeviceManagementIntent {
         
         # Get all setting categories in the Device Management Template
         Write-Verbose "Requesting Template Categories"
-        $templateCategories = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/templates/$($intent.templateId)/categories" | Get-MSGraphAllPages
+        $templateCategories = Get-MgDeviceManagementTemplateCategory -DeviceManagementTemplateId $($intent.templateId) -all 
 
         $intentSettingsDelta = @()
         foreach ($templateCategory in $templateCategories) {
             # Get all configured values for the template categories
             Write-Verbose "Requesting Intent Setting Values"
-            $intentSettingsDelta += (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/intents/$($intent.id)/categories/$($templateCategory.id)/settings").value
+            $intentSettingsDelta += Get-MgDeviceManagementIntentCategorySetting -DeviceManagementIntentId: $($intent.id) -DeviceManagementIntentSettingCategoryId $($templateCategory.id) -all| ForEach-Object{
+                [PSCustomObject]@{
+                    "@odata.type"   = $_.AdditionalProperties."@odata.type"
+                    id              = $_.id
+                    definitionId    = $_.DefinitionId
+                    valueJson       = $_.ValueJson
+                    value           = $_.AdditionalProperties.value
+                }
+            }
         }
 
         $intentBackupValue = @{
@@ -66,7 +78,7 @@ function Invoke-IntuneBackupDeviceManagementIntent {
         }
         
         $fileName = ("$($template.id)_$($intent.displayName)").Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $intentBackupValue | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Intents\$templateDisplayName\$fileName.json"
+        $intentBackupValue | ConvertTo-Json -depth 10 | Out-File -LiteralPath "$path\Device Management Intents\$templateDisplayName\$fileName.json"
 
         [PSCustomObject]@{
             "Action" = "Backup"

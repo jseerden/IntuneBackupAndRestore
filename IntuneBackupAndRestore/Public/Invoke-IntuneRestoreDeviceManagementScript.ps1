@@ -19,29 +19,36 @@ function Invoke-IntuneRestoreDeviceManagementScript {
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
+        [bool]$RestoreById = $false,
+
+        [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Get all device management scripts
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File
     foreach ($deviceManagementScript in $deviceManagementScripts) {
-        $deviceManagementScriptContent = Get-Content -LiteralPath $deviceManagementScript.FullName -Raw
-        $deviceManagementScriptDisplayName = ($deviceManagementScriptContent | ConvertFrom-Json).displayName  
+        $deviceManagementScriptContent = Get-Content -LiteralPath $deviceManagementScript.FullName | Convertfrom-Json
+
+        $deviceManagementScriptDisplayName = $deviceManagementScriptContent.displayName  
         
         # Remove properties that are not available for creating a new configuration
-        $requestBodyObject = $deviceManagementScriptContent | ConvertFrom-Json
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
+        $requestBody = $deviceManagementScriptContent | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json
 
         # Restore the device management script
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$apiVersion/deviceManagement/deviceManagementScripts" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Script"

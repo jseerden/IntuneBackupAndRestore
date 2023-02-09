@@ -32,10 +32,19 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
+    }
+
+    # Create the base requestBody
+    $requestBody = @{
+        deviceManagementScriptAssignments = @()
     }
 
     # Get all policies with assignments
@@ -43,6 +52,7 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationAssignments = Get-Content -LiteralPath $groupPolicyConfiguration.FullName | ConvertFrom-Json
         $groupPolicyConfigurationId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[0]
+        $groupPolicyConfigurationName = $groupPolicyConfiguration.BaseName
 
         # Create the base requestBody
         $requestBody = @{
@@ -62,34 +72,34 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         # Get the Group Policy Configuration we are restoring the assignments for
         try {
             if ($restoreById) {
-                $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$groupPolicyConfigurationId"
+                $groupPolicyConfigurationObject = Invoke-MgGraphRequest -Method GET -Uri "$apiVersion/deviceManagement/groupPolicyConfigurations/$groupPolicyConfigurationId"
             }
             else {
-                $groupPolicyConfigurationObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages | Where-Object displayName -eq "$($groupPolicyConfiguration.BaseName)"
+                $groupPolicyConfigurationObject = Invoke-MgGraphRequest -Method GET -Uri "$apiVersion/deviceManagement/groupPolicyConfigurations" | Get-MGGraphAllPages | Where-Object displayName -eq $groupPolicyConfigurationName
                 if (-not ($groupPolicyConfigurationObject)) {
-                    Write-Verbose "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore" -Verbose
+                    Write-Verbose "Error retrieving Intune Administrative Template for $groupPolicyConfigurationName. Skipping assignment restore" -Verbose
                     continue
                 }
             }
         }
         catch {
-            Write-Verbose "Error retrieving Intune Administrative Template for $($groupPolicyConfiguration.FullName). Skipping assignment restore" -Verbose
+            Write-Verbose "Error retrieving Intune Administrative Template for $groupPolicyConfigurationName. Skipping assignment restore" -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -body $requestBody.toString() -Method POST -Uri "$apiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Administrative Template Assignments"
                 "Name"   = $groupPolicyConfigurationObject.displayName
-                "Path"   = "Administrative Templates\Assignments\$($groupPolicyConfiguration.Name)"
+                "Path"   = "Administrative Templates\Assignments\$groupPolicyConfigurationName"
             }
         }
         catch {
-            Write-Verbose "$($groupPolicyConfigurationObject.displayName) - Failed to restore Administrative Template Assignment(s)" -Verbose
+            Write-Verbose "$groupPolicyConfigurationName - Failed to restore Administrative Template Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

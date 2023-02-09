@@ -12,7 +12,6 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
     .EXAMPLE
     Invoke-IntuneRestoreAppProtectionPolicy -Path "C:\temp" -RestoreById $true
     #>
-    
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -23,21 +22,25 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Get all App Protection Policies
     $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File
     
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        $appProtectionPolicyContent = Get-Content -LiteralPath $appProtectionPolicy.FullName -Raw
-        $appProtectionPolicyDisplayName = ($appProtectionPolicyContent | ConvertFrom-Json).displayName
+        $appProtectionPolicyContent = Get-Content -LiteralPath $appProtectionPolicy.FullName | convertfrom-json
+        $appProtectionPolicyDisplayName = $appProtectionPolicyContent.displayName
 
         # Remove properties that are not available for creating a new configuration
-        $requestBodyObject = $appProtectionPolicyContent | ConvertFrom-Json
+        $requestBodyObject = $appProtectionPolicyContent
         # Set SupportsScopeTags to $false, because $true currently returns an HTTP Status 400 Bad Request error.
         if ($requestBodyObject.supportsScopeTags) {
             $requestBodyObject.supportsScopeTags = $false
@@ -55,7 +58,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
 
         # Restore the App Protection Policy
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/managedAppPolicies" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/managedAppPolicies" -ErrorAction Stop
 
             [PSCustomObject]@{
                 "Action" = "Restore"

@@ -30,12 +30,17 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
+
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Get all policies with assignments
@@ -43,6 +48,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         $deviceManagementScriptAssignments = Get-Content -LiteralPath $deviceManagementScript.FullName | ConvertFrom-Json
         $deviceManagementScriptId = ($deviceManagementScriptAssignments[0]).id.Split(":")[0]
+        $deviceManagementScriptName = $deviceManagementScript.BaseName
 
         # Create the base requestBody
         $requestBody = @{
@@ -62,25 +68,25 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         # Get the Device Management Script we are restoring the assignments for
         try {
             if ($restoreById) {
-                $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$deviceManagementScriptId"
+                $deviceManagementScriptObject = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceManagementScripts/$deviceManagementScriptId"
             }
             else {
-                $deviceManagementScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts" | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceManagementScript.BaseName)"
+                $deviceManagementScriptObject = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceManagementScripts" | Get-MGGraphAllPages | Where-Object displayName -eq $deviceManagementScriptName
                 if (-not ($deviceManagementScriptObject)) {
-                    Write-Verbose "Error retrieving Intune Device Management Script for $($deviceManagementScript.FullName). Skipping assignment restore" -Verbose
+                    Write-Verbose "Error retrieving Intune Device Management Script for $deviceManagementScriptName. Skipping assignment restore" -Verbose
                     continue
                 }
             }
         }
         catch {
-            Write-Verbose "Error retrieving Intune Device Management Script for $($deviceManagementScript.FullName). Skipping assignment restore" -Verbose
+            Write-Verbose "Error retrieving Intune Device Management Script for $deviceManagementScriptName. Skipping assignment restore" -Verbose
             Write-Error $_ -ErrorAction Continue
             continue
         }
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScriptObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$apiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScriptObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Script Assignments"
@@ -89,7 +95,7 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
             }
         }
         catch {
-            Write-Verbose "$($deviceManagementScriptObject.displayName) - Failed to restore Device Management Script Assignment(s)" -Verbose
+            Write-Verbose "$deviceManagementScriptName - Failed to restore Device Management Script Assignment(s)" -Verbose
             Write-Error $_ -ErrorAction Continue
         }
     }

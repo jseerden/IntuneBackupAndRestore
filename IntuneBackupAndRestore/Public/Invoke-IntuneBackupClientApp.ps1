@@ -22,11 +22,15 @@ function Invoke-IntuneBackupClientApp {
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
     )
+    
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
 
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -35,14 +39,15 @@ function Invoke-IntuneBackupClientApp {
     }
 
     # Get all Client Apps
-    $clientApps = Invoke-MSGraphRequest -Url 'deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)' | Get-MSGraphAllPages
+    $filter = "microsoft.graph.managedApp/appAvailability eq null or microsoft.graph.managedApp/appAvailability eq 'lineOfBusiness' or isAssigned eq true"
+    $clientApps = Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps?filter=$filter" | Get-MgGraphAllPages
 
     foreach ($clientApp in $clientApps) {
         $clientAppType = $clientApp.'@odata.type'.split('.')[-1]
 
         $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $clientAppDetails = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/mobileApps/$($clientApp.id)"
-        $clientAppDetails | ConvertTo-Json | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json"
+        $clientAppDetails =  Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps/$($clientApp.id)"
+        $clientAppDetails | ConvertTo-Json -depth 3 | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json" 
 
         [PSCustomObject]@{
             "Action" = "Backup"
