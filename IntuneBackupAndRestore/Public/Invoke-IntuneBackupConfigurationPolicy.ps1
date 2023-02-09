@@ -23,10 +23,14 @@ function Invoke-IntuneBackupConfigurationPolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -35,11 +39,11 @@ function Invoke-IntuneBackupConfigurationPolicy {
     }
 
     # Get all Setting Catalogs Policies
-    $configurationPolicies = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies" | Get-MSGraphAllPages
+    $configurationPolicies = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/configurationPolicies" | Get-MGGraphAllPages
 
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicy | Add-Member -MemberType NoteProperty -Name 'settings' -Value @() -Force
-        $settings = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies/$($configurationPolicy.id)/settings" | Get-MSGraphAllPages
+        $settings = (Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/configurationPolicies/$($configurationPolicy.id)/settings").value
 
         if ($settings -isnot [System.Array]) {
             $configurationPolicy.Settings = @($settings)

@@ -23,23 +23,26 @@ function Invoke-IntuneBackupDeviceManagementScriptAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Create folder if not exists
+    # Set the Microsoft Graph API endpoint
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
+    }
+
     if (-not (Test-Path "$Path\Device Management Scripts\Assignments")) {
         $null = New-Item -Path "$Path\Device Management Scripts\Assignments" -ItemType Directory
     }
 
     # Get all assignments from all policies
-    $deviceManagementScripts = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts" | Get-MSGraphAllPages
+    $deviceManagementScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts" | Get-MgGraphAllPages
 
     foreach ($deviceManagementScript in $deviceManagementScripts) {
-        $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceManagementScripts/$($deviceManagementScript.id)/assignments" | Get-MSGraphAllPages
-        
+        $assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScript.id)/assignments" | Get-MgGraphAllPages
+
         if ($assignments) {
             $fileName = ($deviceManagementScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
             $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\Assignments\$fileName.json"
