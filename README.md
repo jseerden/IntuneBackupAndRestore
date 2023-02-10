@@ -1,5 +1,3 @@
-Conversion of [Jseerden's excellent IntuneBackupAndRestore module](https://github.com/jseerden/IntuneBackupAndRestore) from [Microsoft.Graph.Intune](https://github.com/microsoft/Intune-PowerShell-SDK) to [Microsoft.Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell). This is required as the Microsoft.Graph.Intune module used ADAL authentication which will be EOL June 2023.
-
 # Intune Backup & Restore
 
 ![PowerShell Gallery](https://img.shields.io/powershellgallery/v/IntuneBackupAndRestore.svg?label=PSGallery%20Version&logo=PowerShell&style=flat-square)
