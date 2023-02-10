@@ -1,3 +1,5 @@
+Conversion of [Jseerden's excellent IntuneBackupAndRestore module](https://github.com/jseerden/IntuneBackupAndRestore) from [Microsoft.Graph.Intune](https://github.com/microsoft/Intune-PowerShell-SDK) to [Microsoft.Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell). This is required as the Microsoft.Graph.Intune module used ADAL authentication which will be EOL June 2023.
+
 # Intune Backup & Restore
 
 ![PowerShell Gallery](https://img.shields.io/powershellgallery/v/IntuneBackupAndRestore.svg?label=PSGallery%20Version&logo=PowerShell&style=flat-square)
@@ -25,8 +27,7 @@ Update-Module -Name IntuneBackupAndRestore
 ## Prerequisites
 As of version 2.0.0, the IntuneBackupAndRestore PowerShell Module has migrated from the MSGraphFunctions PowerShell module to the Microsoft.Graph.Intune PowerShell module. Please make sure you meet the prerequisites below.
 
-- Requires [Microsoft.Graph.Intune](https://github.com/Microsoft/Intune-PowerShell-SDK/) PowerShell Module (`Install-Module -Name Microsoft.Graph.Intune`)
-- Connect to Microsoft Graph using the `Connect-MSGraph` PSCmdlet first.
+- Requires [Microsoft.Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) PowerShell Module (`Install-Module -Name Microsoft.Graph`)
 - Make sure to import the IntuneBackupAndRestore PowerShell module before using it with the `Import-Module IntuneBackupAndRestore` cmdlet.
 
 ## Features
