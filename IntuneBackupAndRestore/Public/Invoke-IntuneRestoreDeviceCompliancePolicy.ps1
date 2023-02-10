@@ -20,10 +20,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
-        [string]$ApiVersion = "Beta",
-
-        [Parameter(Mandatory = $false)]
-        [string]$Prefix
+        [string]$ApiVersion = "Beta"
     )
 
      #Connect to MS-Graph if required
