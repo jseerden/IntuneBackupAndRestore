@@ -24,10 +24,7 @@ function Invoke-IntuneBackupConfigurationPolicy {
     )
 
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
+    Select-MgProfile -Name $ApiVersion
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Settings Catalog")) {
@@ -35,11 +32,10 @@ function Invoke-IntuneBackupConfigurationPolicy {
     }
 
     # Get all Setting Catalogs Policies
-    $configurationPolicies = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies" | Get-MSGraphAllPages
+    $configurationPolicies = Get-MgDeviceManagementConfigurationPolicy -All 
 
     foreach ($configurationPolicy in $configurationPolicies) {
-        $configurationPolicy | Add-Member -MemberType NoteProperty -Name 'settings' -Value @() -Force
-        $settings = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies/$($configurationPolicy.id)/settings" | Get-MSGraphAllPages
+        $settings = Get-MgDeviceManagementConfigurationPolicySetting -DeviceManagementConfigurationPolicyId $configurationPolicy.id -All | ConvertTo-Json
 
         if ($settings -isnot [System.Array]) {
             $configurationPolicy.Settings = @($settings)
