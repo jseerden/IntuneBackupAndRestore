@@ -24,10 +24,8 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
     )
 
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
+    Select-MgProfile -Name $ApiVersion
+    $url = "https://graph.microsoft.com/$ApiVersion"
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\App Protection Policies\Assignments")) {
@@ -35,38 +33,42 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
     }
 
     # Get all assignments from all policies
-    $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
+    #$appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
+    $appProtectionPolicies = Invoke-GraphRequest -Method GET -Uri "$url/deviceAppManagement/managedAppPolicies" -OutputType JSON | ConvertFrom-Json
+    $appProtectionPolicies = $AppProtectionPolicies.value
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         # If Android
         if ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
+            $assignments = Invoke-GraphRequest -Method GET -Uri "$url/deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
         }
         # Elseif iOS
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
+            $assignments = Invoke-GraphRequest -Method GET -Uri "$url/deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
         }
         # Elseif Windows 10 with enrollment
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/mdmWindowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
+            $assignments = Invoke-GraphRequest -Method GET -Uri "$url/deviceAppManagement/mdmWindowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
         }
         # Elseif Windows 10 without enrollment
         elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/windowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
+            $assignments = Invoke-GraphRequest -Method GET -Uri "$url/deviceAppManagement/windowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
         }
         else {
             # Not supported App Protection Policy
             continue
         }
-
+        
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
-
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "App Protection Policy Assignments"
-            "Name"   = $appProtectionPolicy.displayName
-            "Path"   = "App Protection Policies\Assignments\$fileName.json"
+        $assignments = $assignments.value
+        if ($assignments) {
+            $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
+            [PSCustomObject]@{
+                "Action" = "Backup"
+                "Type"   = "App Protection Policy Assignments"
+                "Name"   = $appProtectionPolicy.displayName
+                "Path"   = "App Protection Policies\Assignments\$fileName.json"
+            }
         }
     }
 }
