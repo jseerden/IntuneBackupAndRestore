@@ -24,10 +24,8 @@ function Invoke-IntuneBackupConfigurationPolicyAssignment {
     )
 
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
+    Select-MgProfile -Name $ApiVersion
+    $url = "https://graph.microsoft.com/$ApiVersion"
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Settings Catalog\Assignments")) {
@@ -35,14 +33,14 @@ function Invoke-IntuneBackupConfigurationPolicyAssignment {
     }
 
     # Get all assignments from all policies
-    $configurationPolicies = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies" | Get-MSGraphAllPages
+    $configurationPolicies = Get-MgDeviceManagementConfigurationPolicy -All 
 
     foreach ($configurationPolicy in $configurationPolicies) {
-        $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies/$($configurationPolicy.id)/assignments" | Get-MSGraphAllPages
-        
-        if ($assignments) {
+        $assignments = Invoke-GraphRequest -Method GET -Uri "$url/deviceManagement/configurationPolicies/$($configurationPolicy.id)/assignments"-OutputType JSON | ConvertFrom-Json
+
+        if ($assignments.value) {
             $fileName = ($configurationPolicy.name).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Settings Catalog\Assignments\$fileName.json"
+            $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Settings Catalog\Assignments\$fileName.json"
 
             [PSCustomObject]@{
                 "Action" = "Backup"
