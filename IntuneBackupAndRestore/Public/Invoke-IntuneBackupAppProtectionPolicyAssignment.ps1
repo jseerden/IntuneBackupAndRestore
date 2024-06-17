@@ -38,26 +38,32 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
     $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        # If Android
-        if ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
+        switch ($appProtectionPolicy.'@odata.type') {
+            "#microsoft.graph.androidManagedAppProtection" {
+                $dataType = "androidManagedAppProtections"
+                break
+            }
+            "#microsoft.graph.iosManagedAppProtection" {
+                $dataType = "iosManagedAppProtections"
+                break
+            }
+            "#microsoft.graph.mdmWindowsInformationProtectionPolicy" {
+                $dataType = "mdmWindowsInformationProtectionPolicies"
+                break
+            }
+            "#microsoft.graph.windowsInformationProtectionPolicy" {
+                $dataType = "windowsInformationProtectionPolicies"
+                break
+            }
+            "#microsoft.graph.targetedManagedAppConfiguration" {
+                $dataType = "targetedManagedAppConfigurations"
+                break
+            }
+            Default {
+                continue
+            }
         }
-        # Elseif iOS
-        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')/assignments"
-        }
-        # Elseif Windows 10 with enrollment
-        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/mdmWindowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
-        }
-        # Elseif Windows 10 without enrollment
-        elseif ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
-            $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/windowsInformationProtectionPolicies('$($appProtectionPolicy.id)')/assignments"
-        }
-        else {
-            # Not supported App Protection Policy
-            continue
-        }
+		$assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/$dataType('$($appProtectionPolicy.id)')/assignments"
 
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
