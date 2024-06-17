@@ -42,4 +42,5 @@ function Start-IntuneRestoreAssignments() {
     Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceManagementScriptAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreGroupPolicyConfigurationAssignment -Path $path -RestoreById $restoreById
+	Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path
 }

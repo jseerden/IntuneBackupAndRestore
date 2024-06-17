@@ -33,25 +33,27 @@
     foreach ($healthScript in $healthScripts) {
         $fileName = ($healthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 
-        # Export the Health script profile
-        $healthScript | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\$fileName.json"
+        # Export the Health script profile (excluding Microsoft builtin scripts)
+		if (-not ($healthScript.publisher -eq "Microsoft")) {
+			$healthScriptObject = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/deviceHealthScripts/$($healthScript.id)"
+			$healthScriptObject | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\$fileName.json"
 
-        # Create folder if not exists
-        if (-not (Test-Path "$Path\Device Health Scripts\Script Content")) {
-            $null = New-Item -Path "$Path\Device Health Scripts\Script Content" -ItemType Directory
-        }
+			# Create folder if not exists
+			if (-not (Test-Path "$Path\Device Health Scripts\Script Content")) {
+				$null = New-Item -Path "$Path\Device Health Scripts\Script Content" -ItemType Directory
+			}
 
-        $healthScriptObject = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/deviceHealthScripts/$($healthScript.id)"
-        $healthScriptDetectionContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.detectionScriptContent))
-        $healthScriptDetectionContent | Out-File -LiteralPath "$path\Device Health Scripts\Script Content\$fileName`_detection.ps1"
-        $healthScriptRemediationContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.remediationScriptContent))
-        $healthScriptRemediationContent | Out-File -LiteralPath "$path\Device Health Scripts\Script Content\$fileName`_remediation.ps1"
+			$healthScriptDetectionContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.detectionScriptContent))
+			$healthScriptDetectionContent | Out-File -LiteralPath "$path\Device Health Scripts\Script Content\$fileName`_detection.ps1"
+			$healthScriptRemediationContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($healthScriptObject.remediationScriptContent))
+			$healthScriptRemediationContent | Out-File -LiteralPath "$path\Device Health Scripts\Script Content\$fileName`_remediation.ps1"
 
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "Device Health Scripts"
-            "Name"   = $healthScript.displayName
-            "Path"   = "Device Health Scripts\$fileName.json"
-        }
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "Device Health Scripts"
+				"Name"   = $healthScript.displayName
+				"Path"   = "Device Health Scripts\$fileName.json"
+			}
+		}
     }
 }
