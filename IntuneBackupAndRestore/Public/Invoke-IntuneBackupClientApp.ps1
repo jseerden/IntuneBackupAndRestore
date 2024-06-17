@@ -28,32 +28,30 @@ function Invoke-IntuneBackupClientApp {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Client Apps")) {
-        $null = New-Item -Path "$Path\Client Apps" -ItemType Directory
-    }
-
     # Get all Client Apps
     $filter = "microsoft.graph.managedApp/appAvailability eq null or microsoft.graph.managedApp/appAvailability eq 'lineOfBusiness' or isAssigned eq true"
     $clientApps = Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps?filter=$filter" | Get-MgGraphAllPages
 
-    foreach ($clientApp in $clientApps) {
-        $clientAppType = $clientApp.'@odata.type'.split('.')[-1]
+	if ($clientApps.value -ne "") {
 
-        $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $clientAppDetails =  Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps/$($clientApp.id)"
-        $clientAppDetails | ConvertTo-Json -depth 3 | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json" 
-
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "Client App"
-            "Name"   = $clientApp.displayName
-            "Path"   = "Client Apps\$($clientAppType)_$($fileName).json"
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Client Apps")) {
+			$null = New-Item -Path "$Path\Client Apps" -ItemType Directory
+		}
+		
+		foreach ($clientApp in $clientApps) {
+			$clientAppType = $clientApp.'@odata.type'.split('.')[-1]
+		
+			$fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+			$clientAppDetails =  Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps/$($clientApp.id)"
+			$clientAppDetails | ConvertTo-Json -depth 3 | Out-File -LiteralPath "$path\Client Apps\$($clientAppType)_$($fileName).json" 
+		
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "Client App"
+				"Name"   = $clientApp.displayName
+				"Path"   = "Client Apps\$($clientAppType)_$($fileName).json"
+			}
+		}
+	}
 }

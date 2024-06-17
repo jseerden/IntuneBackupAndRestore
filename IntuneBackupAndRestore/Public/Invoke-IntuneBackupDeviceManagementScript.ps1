@@ -28,33 +28,31 @@ function Invoke-IntuneBackupDeviceManagementScript {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Management Scripts\Script Content")) {
-        $null = New-Item -Path "$Path\Device Management Scripts\Script Content" -ItemType Directory
-    }
-
     # Get all device management scripts
     $deviceManagementScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts" | Get-MgGraphAllPages
+	
+	if ($deviceManagementScripts.value -ne "") {
+		
+	    # Create folder if not exists
+		if (-not (Test-Path "$Path\Device Management Scripts\Script Content")) {
+			$null = New-Item -Path "$Path\Device Management Scripts\Script Content" -ItemType Directory
+		}
+	
+		foreach ($deviceManagementScript in $deviceManagementScripts) {
+			# ScriptContent returns null, so we have to query Microsoft Graph for each script
+			$deviceManagementScriptObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScript.Id)" | Get-MgGraphAllPages
+			$deviceManagementScriptFileName = ($deviceManagementScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+			$deviceManagementScriptObject | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\$deviceManagementScriptFileName.json"
 
-    foreach ($deviceManagementScript in $deviceManagementScripts) {
-        # ScriptContent returns null, so we have to query Microsoft Graph for each script
-        $deviceManagementScriptObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScript.Id)" | Get-MgGraphAllPages
-        $deviceManagementScriptFileName = ($deviceManagementScriptObject.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $deviceManagementScriptObject | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\$deviceManagementScriptFileName.json"
+			$deviceManagementScriptContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($deviceManagementScriptObject.scriptContent))
+			$deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$deviceManagementScriptFileName.ps1"
 
-        $deviceManagementScriptContent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($deviceManagementScriptObject.scriptContent))
-        $deviceManagementScriptContent | Out-File -LiteralPath "$path\Device Management Scripts\Script Content\$deviceManagementScriptFileName.ps1"
-
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "Device Management Script"
-            "Name"   = $deviceManagementScript.displayName
-            "Path"   = "Device Management Scripts\$deviceManagementScriptFileName.json"
-        }
-    }
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "Device Management Script"
+				"Name"   = $deviceManagementScript.displayName
+				"Path"   = "Device Management Scripts\$deviceManagementScriptFileName.json"
+			}
+		}
+	}
 }

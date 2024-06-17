@@ -28,54 +28,52 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\App Protection Policies\Assignments")) {
-        $null = New-Item -Path "$Path\App Protection Policies\Assignments" -ItemType Directory
-    }
-
     $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
-    foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        switch ($appProtectionPolicy.'@odata.type') {
-            "#microsoft.graph.androidManagedAppProtection" {
-                $dataType = "androidManagedAppProtections"
-                break
-            }
-            "#microsoft.graph.iosManagedAppProtection" {
-                $dataType = "iosManagedAppProtections"
-                break
-            }
-            "#microsoft.graph.mdmWindowsInformationProtectionPolicy" {
-                $dataType = "mdmWindowsInformationProtectionPolicies"
-                break
-            }
-            "#microsoft.graph.windowsInformationProtectionPolicy" {
-                $dataType = "windowsInformationProtectionPolicies"
-                break
-            }
-            "#microsoft.graph.targetedManagedAppConfiguration" {
-                $dataType = "targetedManagedAppConfigurations"
-                break
-            }
-            Default {
-                continue
-            }
-        }
-		$assignments = Invoke-MgGraphRequest -Uri "deviceAppManagement/$dataType('$($appProtectionPolicy.id)')/assignments"
+	if ($appProtectionPolicies.value -ne "") {
 
-        $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
-
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "App Protection Policy Assignments"
-            "Name"   = $appProtectionPolicy.displayName
-            "Path"   = "App Protection Policies\Assignments\$fileName.json"
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\App Protection Policies\Assignments")) {
+			$null = New-Item -Path "$Path\App Protection Policies\Assignments" -ItemType Directory
+		}
+	
+		foreach ($appProtectionPolicy in $appProtectionPolicies) {
+			switch ($appProtectionPolicy.'@odata.type') {
+				"#microsoft.graph.androidManagedAppProtection" {
+					$dataType = "androidManagedAppProtections"
+					break
+				}
+				"#microsoft.graph.iosManagedAppProtection" {
+					$dataType = "iosManagedAppProtections"
+					break
+				}
+				"#microsoft.graph.mdmWindowsInformationProtectionPolicy" {
+					$dataType = "mdmWindowsInformationProtectionPolicies"
+					break
+				}
+				"#microsoft.graph.windowsInformationProtectionPolicy" {
+					$dataType = "windowsInformationProtectionPolicies"
+					break
+				}
+				"#microsoft.graph.targetedManagedAppConfiguration" {
+					$dataType = "targetedManagedAppConfigurations"
+					break
+				}
+				Default {
+					continue
+				}
+			}
+			$assignments = Invoke-MgGraphRequest -Uri "deviceAppManagement/$dataType('$($appProtectionPolicy.id)')/assignments"
+	
+			$fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+			$assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"
+	
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "App Protection Policy Assignments"
+				"Name"   = $appProtectionPolicy.displayName
+				"Path"   = "App Protection Policies\Assignments\$fileName.json"
+			}
+		}
+	}
 }

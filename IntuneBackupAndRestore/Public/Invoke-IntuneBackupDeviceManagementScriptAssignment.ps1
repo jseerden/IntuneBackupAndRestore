@@ -28,31 +28,30 @@ function Invoke-IntuneBackupDeviceManagementScriptAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    if (-not (Test-Path "$Path\Device Management Scripts\Assignments")) {
-        $null = New-Item -Path "$Path\Device Management Scripts\Assignments" -ItemType Directory
-    }
-
     # Get all assignments from all policies
     $deviceManagementScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts" | Get-MgGraphAllPages
 
-    foreach ($deviceManagementScript in $deviceManagementScripts) {
-        $assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScript.id)/assignments" | Get-MgGraphAllPages
+	if ($deviceManagementScripts.value -ne "") {
 
-        if ($assignments) {
-            $fileName = ($deviceManagementScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\Assignments\$fileName.json"
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Management Scripts\Assignments")) {
+			$null = New-Item -Path "$Path\Device Management Scripts\Assignments" -ItemType Directory
+		}
 
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Device Management Script Assignments"
-                "Name"   = $deviceManagementScript.displayName
-                "Path"   = "Device Management Scripts\Assignments\$fileName.json"
-            }
-        }
-    }
+		foreach ($deviceManagementScript in $deviceManagementScripts) {
+			$assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts/$($deviceManagementScript.id)/assignments" | Get-MgGraphAllPages
+	
+			if ($assignments) {
+				$fileName = ($deviceManagementScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Management Scripts\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Device Management Script Assignments"
+					"Name"   = $deviceManagementScript.displayName
+					"Path"   = "Device Management Scripts\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

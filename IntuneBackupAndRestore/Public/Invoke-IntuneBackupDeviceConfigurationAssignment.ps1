@@ -28,32 +28,30 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Configurations\Assignments")) {
-        $null = New-Item -Path "$Path\Device Configurations\Assignments" -ItemType Directory
-    }
-
     # Get all assignments from all policies
     $deviceConfigurations = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations" | Get-MGGraphAllPages
-    
-    foreach ($deviceConfiguration in $deviceConfigurations) {
-        $assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/assignments" | Get-MGGraphAllPages
 
-        if ($assignments) {
-            $fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Configurations\Assignments\$fileName.json"
+	if ($deviceConfigurations.value -ne "") {
 
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Device Configuration Assignments"
-                "Name"   = $deviceConfiguration.displayName
-                "Path"   = "Device Configurations\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Configurations\Assignments")) {
+			$null = New-Item -Path "$Path\Device Configurations\Assignments" -ItemType Directory
+		}
+	
+		foreach ($deviceConfiguration in $deviceConfigurations) {
+			$assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/assignments" | Get-MGGraphAllPages
+	
+			if ($assignments) {
+				$fileName = ($deviceConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Configurations\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Device Configuration Assignments"
+					"Name"   = $deviceConfiguration.displayName
+					"Path"   = "Device Configurations\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

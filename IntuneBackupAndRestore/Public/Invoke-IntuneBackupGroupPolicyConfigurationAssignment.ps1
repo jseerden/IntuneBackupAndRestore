@@ -28,32 +28,30 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
     
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Administrative Templates\Assignments")) {
-        $null = New-Item -Path "$Path\Administrative Templates\Assignments" -ItemType Directory
-    }
-
     # Get all assignments from all policies
     $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations" | Get-MgGraphAllPages
 
-    foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/assignments" | Get-MgGraphAllPages
-        
-        if ($assignments) {
-            $fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Administrative Templates\Assignments\$fileName.json"
+	if ($groupPolicyConfigurations.value -ne "") {
 
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Administrative Template Assignments"
-                "Name"   = $groupPolicyConfiguration.displayName
-                "Path"   = "Administrative Templates\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Administrative Templates\Assignments")) {
+			$null = New-Item -Path "$Path\Administrative Templates\Assignments" -ItemType Directory
+		}
+	
+		foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
+			$assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/assignments" | Get-MgGraphAllPages
+			
+			if ($assignments) {
+				$fileName = ($groupPolicyConfiguration.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Administrative Templates\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Administrative Template Assignments"
+					"Name"   = $groupPolicyConfiguration.displayName
+					"Path"   = "Administrative Templates\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

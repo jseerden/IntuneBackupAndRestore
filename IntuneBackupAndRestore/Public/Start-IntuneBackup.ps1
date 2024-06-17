@@ -46,9 +46,9 @@ function Start-IntuneBackup() {
             Write-Host "Incorrect scopes, please sign in again"
             connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All"
         }else{
-            Write-Host "MS-Graph scopes are correct"     
+            Write-Host "MS-Graph scopes are correct"
         }
-  
+		Write-Host ""
     }
 
     Invoke-IntuneBackupClientApp -Path $Path

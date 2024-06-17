@@ -38,11 +38,6 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all policies with assignments
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments"
     foreach ($deviceManagementScript in $deviceManagementScripts) {

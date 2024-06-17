@@ -28,31 +28,30 @@
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {
-        $null = New-Item -Path "$Path\Device Health Scripts\Assignments" -ItemType Directory
-    }
-
     # Get all assignments from all policies
     $healthScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" | Get-MGGraphAllPages
 
-    foreach ($deviceHealthScript in $deviceHealthScripts) {
-        $assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceHealthScripts/$($deviceHealthScript.id)/assignments" | Get-MSGraphAllPages
-        
-        if ($assignments) {
-            $fileName = ($deviceHealthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json -depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
+	if ($healthScripts.value -ne "") {
 
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Device Health Scripts Assignments"
-                "Name"   = $deviceHealthScript.displayName
-                "Path"   = "Device Health Scripts\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {
+			$null = New-Item -Path "$Path\Device Health Scripts\Assignments" -ItemType Directory
+		}
+	
+		foreach ($deviceHealthScript in $deviceHealthScripts) {
+			$assignments = Invoke-MgGraphRequest -Uri "deviceManagement/deviceHealthScripts/$($deviceHealthScript.id)/assignments" | Get-MSGraphAllPages
+			
+			if ($assignments) {
+				$fileName = ($deviceHealthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json -depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Device Health Scripts Assignments"
+					"Name"   = $deviceHealthScript.displayName
+					"Path"   = "Device Health Scripts\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

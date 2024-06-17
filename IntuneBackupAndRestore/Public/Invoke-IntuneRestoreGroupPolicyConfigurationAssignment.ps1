@@ -37,11 +37,6 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Create the base requestBody
     $requestBody = @{
         deviceManagementScriptAssignments = @()

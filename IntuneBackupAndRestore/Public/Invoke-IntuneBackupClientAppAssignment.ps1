@@ -28,33 +28,30 @@ function Invoke-IntuneBackupClientAppAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Client Apps\Assignments")) {
-        $null = New-Item -Path "$Path\Client Apps\Assignments" -ItemType Directory
-    }
-
      # Get all Client Apps
      $filter = "microsoft.graph.managedApp/appAvailability eq null or microsoft.graph.managedApp/appAvailability eq 'lineOfBusiness' or isAssigned eq true"
      $clientApps = Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps?filter=$filter" | Get-MgGraphAllPages
 
-    foreach ($clientApp in $clientApps) {
-        $assignments = (Invoke-MgRestMethod -Uri "/$apiversion/deviceAppManagement/mobileApps/$($clientApp.id)/assignments").value
-        if ($assignments) {
-            $fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+	if ($clientApps.value -ne "") {
 
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Client App Assignments"
-                "Name"   = $clientApp.displayName
-                "Path"   = "Client Apps\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Client Apps\Assignments")) {
+			$null = New-Item -Path "$Path\Client Apps\Assignments" -ItemType Directory
+		}
+	
+		foreach ($clientApp in $clientApps) {
+			$assignments = (Invoke-MgRestMethod -Uri "/$apiversion/deviceAppManagement/mobileApps/$($clientApp.id)/assignments").value
+			if ($assignments) {
+				$fileName = ($clientApp.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Client Apps\Assignments\$($clientApp.id) - $fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Client App Assignments"
+					"Name"   = $clientApp.displayName
+					"Path"   = "Client Apps\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

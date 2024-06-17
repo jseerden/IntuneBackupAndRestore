@@ -28,11 +28,6 @@ function Invoke-IntuneRestoreDeviceConfiguration {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all device configurations
     $deviceConfigurations = Get-ChildItem -Path "$path\Device Configurations" -File
     

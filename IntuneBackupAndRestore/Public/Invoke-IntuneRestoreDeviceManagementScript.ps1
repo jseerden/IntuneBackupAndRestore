@@ -31,11 +31,6 @@ function Invoke-IntuneRestoreDeviceManagementScript {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all device management scripts
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File
     foreach ($deviceManagementScript in $deviceManagementScripts) {

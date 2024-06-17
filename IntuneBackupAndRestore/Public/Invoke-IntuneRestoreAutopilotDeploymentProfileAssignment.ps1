@@ -32,12 +32,6 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
-
     # Get all profiles with assignments
     $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles\Assignments"
     foreach ($winAutopilotDeploymentProfile in $winAutopilotDeploymentProfiles) {

@@ -28,11 +28,6 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all Group Policy Configurations
     $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File
 

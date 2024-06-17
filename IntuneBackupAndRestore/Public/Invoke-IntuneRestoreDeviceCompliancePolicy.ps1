@@ -28,12 +28,6 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
-
     # Get all Device Compliance Policies
     $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {

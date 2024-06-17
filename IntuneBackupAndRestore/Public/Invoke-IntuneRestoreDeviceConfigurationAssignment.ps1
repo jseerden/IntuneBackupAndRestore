@@ -37,11 +37,6 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all policies with assignments
     $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments"
     foreach ($deviceConfiguration in $deviceConfigurations) {

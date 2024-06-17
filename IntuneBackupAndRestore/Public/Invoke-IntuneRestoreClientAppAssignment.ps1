@@ -35,11 +35,6 @@ function Invoke-IntuneRestoreClientAppAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all policies with assignments
     $clientAppsAssignmentItems = Get-ChildItem -Path "$Path\Client Apps\Assignments"
     $clientApps = Get-ChildItem -Path "$Path\Client Apps" -File

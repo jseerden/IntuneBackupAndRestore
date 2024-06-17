@@ -35,11 +35,6 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
         connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
-        Select-MgProfile -Name "beta"
-    }
-
     # Get all policies with assignments
     $appProtectionPolicies = Get-ChildItem -Path "$Path\App Protection Policies\Assignments"
     foreach ($appProtectionPolicy in $appProtectionPolicies) {

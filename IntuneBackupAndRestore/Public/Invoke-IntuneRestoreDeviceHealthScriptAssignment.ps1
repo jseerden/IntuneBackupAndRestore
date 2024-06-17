@@ -32,12 +32,6 @@ function Invoke-IntuneRestoreDeviceHealthScriptAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
-
     # Get all policies with assignments
     $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts\Assignments"
     foreach ($deviceHealthScript in $deviceHealthScripts) {

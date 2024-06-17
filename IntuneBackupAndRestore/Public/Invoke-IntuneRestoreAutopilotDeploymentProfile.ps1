@@ -23,12 +23,6 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
-
     # Get all device health scripts
     $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles" -File
     foreach ($winAutopilotDeploymentProfile in $winAutopilotDeploymentProfiles) {
