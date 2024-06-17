@@ -23,10 +23,14 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -34,8 +38,7 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
         $null = New-Item -Path "$Path\App Protection Policies\Assignments" -ItemType Directory
     }
 
-    # Get all assignments from all policies
-    $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
+    $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         switch ($appProtectionPolicy.'@odata.type') {
@@ -63,7 +66,7 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
                 continue
             }
         }
-		$assignments = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceAppManagement/$dataType('$($appProtectionPolicy.id)')/assignments"
+		$assignments = Invoke-MgGraphRequest -Uri "deviceAppManagement/$dataType('$($appProtectionPolicy.id)')/assignments"
 
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $assignments | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\Assignments\$($appProtectionPolicy.id) - $fileName.json"

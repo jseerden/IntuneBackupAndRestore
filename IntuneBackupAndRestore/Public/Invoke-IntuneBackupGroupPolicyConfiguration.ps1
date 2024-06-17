@@ -23,29 +23,33 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+    
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
     if (-not (Test-Path "$Path\Administrative Templates")) {
         $null = New-Item -Path "$Path\Administrative Templates" -ItemType Directory
     }
-
+    
     # Get all Group Policy Configurations
-    $groupPolicyConfigurations = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations" | Get-MSGraphAllPages
+    $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations" | Get-MgGraphAllPages
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
-        $groupPolicyDefinitionValues = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues" | Get-MSGraphAllPages
+        $groupPolicyDefinitionValues = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues" | Get-MgGraphAllPages
         $groupPolicyBackupValues = @()
 
         foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues) {
-            $groupPolicyDefinition = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
-            $groupPolicyPresentationValues = (Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation").Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
+            $groupPolicyDefinition = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
+            $groupPolicyPresentationValues = (Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation").Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
             $groupPolicyBackupValue = @{
-                "enabled" = $groupPolicyDefinitionValue.enabled
+                "enabled"               = $groupPolicyDefinitionValue.enabled
                 "definition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"
             }
 
@@ -53,20 +57,21 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
                 $groupPolicyBackupValue."presentationValues" = @()
                 foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues) {
                     $groupPolicyBackupValue."presentationValues" +=
-                        @{
-                            "@odata.type" = $groupPolicyPresentationValue.'@odata.type'
-                            "value" = $groupPolicyPresentationValue.value
-                            "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
-                        }
+                    @{
+                        "@odata.type"             = $groupPolicyPresentationValue.'@odata.type'
+                        "value"                   = $groupPolicyPresentationValue.value
+                        "presentation@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')/presentations('$($groupPolicyPresentationValue.presentation.id)')"
+                    }
                 }
-            } elseif ($groupPolicyPresentationValues.values) {
+            }
+            elseif ($groupPolicyPresentationValues.values) {
                 $groupPolicyBackupValue."presentationValues" = @(
                     @{
-                        "@odata.type" = $groupPolicyPresentationValues.'@odata.type'
-                        "values" = @(
+                        "@odata.type"             = $groupPolicyPresentationValues.'@odata.type'
+                        "values"                  = @(
                             foreach ($groupPolicyPresentationValue in $groupPolicyPresentationValues.values) {
                                 @{
-                                    "name" = $groupPolicyPresentationValue.name
+                                    "name"  = $groupPolicyPresentationValue.name
                                     "value" = $groupPolicyPresentationValue.value
                                 }
                             }

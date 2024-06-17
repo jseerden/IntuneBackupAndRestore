@@ -23,10 +23,14 @@ function Invoke-IntuneBackupAppProtectionPolicy {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -35,9 +39,20 @@ function Invoke-IntuneBackupAppProtectionPolicy {
     }
 
     # Get all App Protection Policies
-    $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
+    $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
+
+        if (($appProtectionPolicy.AppGroupType -eq "selectedPublicApps") -and ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection')) {
+            $uri = "$ApiVersion/deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')"+'?$expand=apps'
+            $appProtectionPolicy.apps = (Invoke-MgGraphRequest -method get -Uri $uri).apps
+        }
+
+        if (($appProtectionPolicy.AppGroupType -eq "selectedPublicApps") -and ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection')) {
+            $uri = "$ApiVersion/deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')"+'?$expand=apps'
+            $appProtectionPolicy.add("apps",(Invoke-MgGraphRequest -method get -Uri $uri).apps) 
+        }
+
         $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
         $appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
 

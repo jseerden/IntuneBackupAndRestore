@@ -31,6 +31,26 @@ function Start-IntuneRestoreConfig() {
         "Path"   = $Path
     }
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "EntitlementManagement.ReadWrite.All, DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }else{
+        Write-Host "MS-Graph already connected, checking scopes"
+        $scopes = Get-MgContext | Select-Object -ExpandProperty Scopes
+        $IncorrectScopes = $false
+        if ($scopes -notcontains "DeviceManagementApps.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementConfiguration.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementServiceConfig.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementManagedDevices.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($IncorrectScopes) {
+            Write-Host "Incorrect scopes, please sign in again"
+            connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All"
+        }else{
+            Write-Host "MS-Graph scopes are correct"     
+        }
+  
+    }
+
     Invoke-IntuneRestoreConfigurationPolicy -Path $Path
     Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path
     Invoke-IntuneRestoreDeviceConfiguration -Path $Path

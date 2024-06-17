@@ -23,10 +23,14 @@ function Invoke-IntuneBackupDeviceConfiguration {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    if (-not ((Get-MgProfile).name -eq $apiVersion)) {
+        Select-MgProfile -Name "beta"
     }
 
     # Create folder if not exists
@@ -35,7 +39,7 @@ function Invoke-IntuneBackupDeviceConfiguration {
     }
 
     # Get all device configurations
-    $deviceConfigurations = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages
+    $deviceConfigurations = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations" | Get-MGGraphAllPages
     
 
     foreach ($deviceConfiguration in $deviceConfigurations) {
@@ -48,7 +52,7 @@ function Invoke-IntuneBackupDeviceConfiguration {
             foreach ($omaSetting in $deviceConfiguration.omaSettings) {
                 # Check if this particular setting is encrypted, and get the plaintext only if necessary
                 if ($omaSetting.isEncrypted) {
-                    $omaSettingValue = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MSGraphAllPages
+                    $omaSettingValue = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MgGraphAllPages
                 } else {
 					$omaSettingValue
 				}
