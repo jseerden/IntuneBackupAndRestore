@@ -29,7 +29,7 @@
     }
 	
 	# Get all Autopilot Deployment Profiles
-    $winAutopilotDeploymentProfiles = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" | Select-Object -ExpandProperty Value
+    $winAutopilotDeploymentProfiles = Invoke-MgGraphRequest -Uri "https://graph.microsoft.com/$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" -OutputType PSObject | Select-Object -ExpandProperty Value
 
 	if ($winAutopilotDeploymentProfiles.value -ne "") {
 
@@ -42,7 +42,7 @@
 			$fileName = ($winAutopilotDeploymentProfile.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 	
 			# Export the Deployment profile
-			$winAutopilotDeploymentProfileObject = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$($winAutopilotDeploymentProfile.id)"
+			$winAutopilotDeploymentProfileObject = Invoke-MgGraphRequest -Uri "https://graph.microsoft.com/$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$($winAutopilotDeploymentProfile.id)"
 			$winAutopilotDeploymentProfileObject | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Autopilot Deployment Profiles\$fileName.json"
 	
 			[PSCustomObject]@{

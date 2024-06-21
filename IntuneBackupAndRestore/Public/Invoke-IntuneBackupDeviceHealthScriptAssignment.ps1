@@ -39,7 +39,7 @@
 		}
 	
 		foreach ($deviceHealthScript in $deviceHealthScripts) {
-			$assignments = Invoke-MgGraphRequest -Uri "deviceManagement/deviceHealthScripts/$($deviceHealthScript.id)/assignments" | Get-MSGraphAllPages
+			$assignments = Invoke-MgGraphRequest -Uri "deviceManagement/deviceHealthScripts/$($deviceHealthScript.id)/assignments" | Get-MGGraphAllPages
 			
 			if ($assignments) {
 				$fileName = ($deviceHealthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'

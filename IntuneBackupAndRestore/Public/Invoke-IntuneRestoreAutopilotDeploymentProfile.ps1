@@ -36,7 +36,7 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
 
         # Restore the Deployment Profile
 		try {
-			$null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
+			$null = Invoke-MgGraphRequest -Method POST -Content $requestBody.toString() -Uri "deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
 			[PSCustomObject]@{
 				"Action" = "Restore"
 				"Type"   = "Autopilot Deployment Profile"

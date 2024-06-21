@@ -13,9 +13,9 @@ function Start-IntuneBackup() {
     Start-IntuneBackup -Path C:\temp
 
     .NOTES
-    Requires the MSGraphFunctions PowerShell Module
+    Requires the MSGraph SDK PowerShell Module
 
-    Connect to MSGraph first, using the 'connect-mggraph' cmdlet and the scopes: 'DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All'.
+    Connect to MSGraph first, using the 'Connect-MgGraph' cmdlet and the scopes: 'DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All'.
     #>
 
     [CmdletBinding()]
