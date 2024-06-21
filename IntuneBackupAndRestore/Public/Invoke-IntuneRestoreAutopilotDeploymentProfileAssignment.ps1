@@ -33,7 +33,8 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment {
     )
 
     # Get all profiles with assignments
-    $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles\Assignments"
+    $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($winAutopilotDeploymentProfile in $winAutopilotDeploymentProfiles) {
         $winAutopilotDeploymentProfileAssignments = Get-Content -LiteralPath $winAutopilotDeploymentProfile.FullName | ConvertFrom-Json
         $winAutopilotDeploymentProfileId = ($winAutopilotDeploymentProfileAssignments[0]).id.Split(":")[0]

@@ -28,7 +28,7 @@ function Invoke-IntuneRestoreAppProtectionPolicy {
     }
 
     # Get all App Protection Policies
-    $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File
+    $appProtectionPolicies = Get-ChildItem -Path "$path\App Protection Policies" -File -ErrorAction SilentlyContinue
     
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         $appProtectionPolicyContent = Get-Content -LiteralPath $appProtectionPolicy.FullName | convertfrom-json

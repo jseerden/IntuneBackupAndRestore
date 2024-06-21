@@ -33,7 +33,8 @@ function Invoke-IntuneRestoreDeviceHealthScriptAssignment {
     )
 
     # Get all policies with assignments
-    $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts\Assignments"
+    $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceHealthScript in $deviceHealthScripts) {
         $deviceHealthScriptAssignments = Get-Content -LiteralPath $deviceHealthScript.FullName | ConvertFrom-Json
         $deviceHealthScriptId = ($deviceHealthScriptAssignments[0]).id.Split(":")[0]
@@ -58,10 +59,10 @@ function Invoke-IntuneRestoreDeviceHealthScriptAssignment {
         # Get the Device Health Script we are restoring the assignments for
         try {
             if ($restoreById) {
-                $deviceHealthScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceHealthScripts/$deviceHealthScriptId"
+                $deviceHealthScriptObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts/$deviceHealthScriptId"
             }
             else {
-                $deviceHealthScriptObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/deviceHealthScripts" | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceHealthScript.BaseName)"
+                $deviceHealthScriptObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceHealthScript.BaseName)"
                 if (-not ($deviceHealthScriptObject)) {
                     Write-Verbose "Error retrieving Intune Device Health Script for $($deviceHealthScript.FullName). Skipping assignment restore" -Verbose
                     continue
@@ -76,7 +77,7 @@ function Invoke-IntuneRestoreDeviceHealthScriptAssignment {
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceHealthScripts/$($deviceHealthScriptObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/deviceHealthScripts/$($deviceHealthScriptObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Health Script Assignments"

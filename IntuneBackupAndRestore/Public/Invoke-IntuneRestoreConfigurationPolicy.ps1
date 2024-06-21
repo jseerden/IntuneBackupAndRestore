@@ -29,7 +29,7 @@ function Invoke-IntuneRestoreConfigurationPolicy {
     }
 
     # Get all Settings Catalog Policies
-    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog" -File
+    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog" -File -ErrorAction SilentlyContinue
 
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyContent = Get-Content -LiteralPath $configurationPolicy.FullName -Raw | ConvertFrom-Json

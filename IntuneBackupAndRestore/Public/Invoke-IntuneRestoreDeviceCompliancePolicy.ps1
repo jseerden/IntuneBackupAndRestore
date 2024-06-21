@@ -29,7 +29,8 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName  -Raw | ConvertFrom-Json
 

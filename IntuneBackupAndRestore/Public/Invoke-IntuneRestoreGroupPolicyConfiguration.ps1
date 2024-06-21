@@ -29,7 +29,7 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
     }
 
     # Get all Group Policy Configurations
-    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File
+    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates" -File -ErrorAction SilentlyContinue
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json

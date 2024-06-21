@@ -50,7 +50,7 @@ function Invoke-IntuneBackupDeviceConfiguration {
 					if ($omaSetting.isEncrypted) {
 						$omaSettingValue = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations/$($deviceConfiguration.id)/getOmaSettingPlainTextValue(secretReferenceValueId='$($omaSetting.secretReferenceValueId)')" | Get-MgGraphAllPages
 					} else {
-						$omaSettingValue
+						$omaSettingValue = $omaSetting.value
 					}
 					# Define a new 'unencrypted' OMA Setting
 					$newOmaSetting = @{}

@@ -32,7 +32,8 @@ function Invoke-IntuneRestoreDeviceManagementScript {
     }
 
     # Get all device management scripts
-    $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File
+    $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         $deviceManagementScriptContent = Get-Content -LiteralPath $deviceManagementScript.FullName | Convertfrom-Json
 

@@ -24,7 +24,8 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
     )
 
     # Get all device health scripts
-    $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles" -File
+    $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles" -File -ErrorAction SilentlyContinue
+	
     foreach ($winAutopilotDeploymentProfile in $winAutopilotDeploymentProfiles) {
         $winAutopilotDeploymentProfileContent = Get-Content -LiteralPath $winAutopilotDeploymentProfile.FullName -Raw
         $winAutopilotDeploymentProfileDisplayName = ($winAutopilotDeploymentProfileContent | ConvertFrom-Json).displayName  

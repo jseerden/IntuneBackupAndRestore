@@ -24,7 +24,8 @@ function Invoke-IntuneRestoreDeviceHealthScript {
     )
 
     # Get all device health scripts
-    $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts" -File
+    $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceHealthScript in $deviceHealthScripts) {
         $deviceHealthScriptContent = Get-Content -LiteralPath $deviceHealthScript.FullName -Raw
         $deviceHealthScriptDisplayName = ($deviceHealthScriptContent | ConvertFrom-Json).displayName  
@@ -36,7 +37,7 @@ function Invoke-IntuneRestoreDeviceHealthScript {
         # Restore the device health script (excluding Microsoft builtin scripts)
 		if (-not ($requestBodyObject.publisher -eq "Microsoft")) {
 			try {
-				$null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceHealthScripts" -ErrorAction Stop
+				$null = Invoke-MgGraphRequest -Method POST -body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" -ErrorAction Stop
 				[PSCustomObject]@{
 					"Action" = "Restore"
 					"Type"   = "Device Health Script"

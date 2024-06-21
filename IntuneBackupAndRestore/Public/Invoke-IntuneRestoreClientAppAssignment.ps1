@@ -36,8 +36,9 @@ function Invoke-IntuneRestoreClientAppAssignment {
     }
 
     # Get all policies with assignments
-    $clientAppsAssignmentItems = Get-ChildItem -Path "$Path\Client Apps\Assignments"
-    $clientApps = Get-ChildItem -Path "$Path\Client Apps" -File
+    $clientAppsAssignmentItems = Get-ChildItem -Path "$Path\Client Apps\Assignments" -File -ErrorAction SilentlyContinue
+    $clientApps = Get-ChildItem -Path "$Path\Client Apps" -File -ErrorAction SilentlyContinue
+	
     foreach ($clientApp in $clientAppsAssignmentItems) {
         $clientAppAssignments = Get-Content -LiteralPath $clientApp.FullName | ConvertFrom-Json
         $clientAppId = ($clientApp.BaseName -split " - ")[0]

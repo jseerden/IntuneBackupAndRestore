@@ -39,7 +39,8 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
     }
 
     # Get all policies with assignments
-    $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments"
+    $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceManagementScript in $deviceManagementScripts) {
         $deviceManagementScriptAssignments = Get-Content -LiteralPath $deviceManagementScript.FullName | ConvertFrom-Json
         $deviceManagementScriptId = ($deviceManagementScriptAssignments[0]).id.Split(":")[0]

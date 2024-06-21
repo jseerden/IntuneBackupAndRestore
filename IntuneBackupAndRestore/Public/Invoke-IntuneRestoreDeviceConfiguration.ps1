@@ -29,7 +29,7 @@ function Invoke-IntuneRestoreDeviceConfiguration {
     }
 
     # Get all device configurations
-    $deviceConfigurations = Get-ChildItem -Path "$path\Device Configurations" -File
+    $deviceConfigurations = Get-ChildItem -Path "$path\Device Configurations" -File -ErrorAction SilentlyContinue
     
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $deviceConfigurationContent = Get-Content -LiteralPath $deviceConfiguration.FullName -Raw | ConvertFrom-Json

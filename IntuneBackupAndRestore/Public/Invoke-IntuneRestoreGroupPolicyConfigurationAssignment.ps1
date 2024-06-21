@@ -43,7 +43,8 @@ function Invoke-IntuneRestoreGroupPolicyConfigurationAssignment {
     }
 
     # Get all policies with assignments
-    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates\Assignments"
+    $groupPolicyConfigurations = Get-ChildItem -Path "$Path\Administrative Templates\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationAssignments = Get-Content -LiteralPath $groupPolicyConfiguration.FullName | ConvertFrom-Json
         $groupPolicyConfigurationId = ($groupPolicyConfigurationAssignments[0]).id.Split("_")[0]

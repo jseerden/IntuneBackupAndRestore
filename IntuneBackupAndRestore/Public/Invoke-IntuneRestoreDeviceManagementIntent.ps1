@@ -30,7 +30,7 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
     }
 
     # Get all device management intents
-    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File
+    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File -ErrorAction SilentlyContinue
 
     #Used to exclude Onboarding/Offboarding blob settings if AutoPopulateOnboardingBlob is set to $true
     $excludedEDRDefinitions = @(
@@ -60,7 +60,7 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
         $deviceManagementIntentJson = $($deviceManagementIntentContent | convertto-json -Depth 100)
         # Restore the device management intent
         try {
-            New-MgDeviceManagementTemplateInstance -DeviceManagementTemplateId $templateId -BodyParameter $deviceManagementIntentJson
+            New-MgBetaDeviceManagementTemplateInstance -DeviceManagementTemplateId $templateId -BodyParameter $deviceManagementIntentJson
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Intent"

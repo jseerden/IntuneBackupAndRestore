@@ -44,7 +44,8 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
 	
 			foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues) {
 				$groupPolicyDefinition = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
-				$groupPolicyPresentationValues = (Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation").Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
+				$groupPolicyPresentationValues = (Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation" -OutputType PSObject).Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
+			
 				$groupPolicyBackupValue = @{
 					"enabled"               = $groupPolicyDefinitionValue.enabled
 					"definition@odata.bind" = "https://graph.microsoft.com/beta/deviceManagement/groupPolicyDefinitions('$($groupPolicyDefinition.id)')"
