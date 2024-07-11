@@ -42,8 +42,8 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyAssignments = Get-Content -LiteralPath $configurationPolicy.FullName | ConvertFrom-Json
         $configurationPolicyId = ($configurationPolicyAssignments[0]).id.Split("_")[0]
-        $configurationPolicyName = $($configurationPolicy.Name).split(".json")[0]
-
+        $configurationPolicyName = $configurationPolicy.BaseName
+		
         # Create the base requestBody
         $requestBody = @{
             assignments = @()
