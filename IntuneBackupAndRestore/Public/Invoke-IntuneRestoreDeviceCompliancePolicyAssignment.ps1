@@ -18,7 +18,6 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
     .EXAMPLE
     Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path "C:\temp" -RestoreById $true
     #>
-    
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -32,17 +31,18 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all policies with assignments
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\Assignments"
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
         $deviceCompliancePolicyAssignments = Get-Content -LiteralPath $deviceCompliancePolicy.FullName | ConvertFrom-Json
         $deviceCompliancePolicyId = ($deviceCompliancePolicyAssignments[0]).id.Split("_")[0]
+        $deviceCompliancePolicyName = $deviceCompliancePolicy.BaseName 
 
         # Create the base requestBody
         $requestBody = @{
@@ -62,10 +62,10 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
         # Get the Device Compliance Policy we are restoring the assignments for
         try {
             if ($restoreById) {
-                $deviceCompliancePolicyObject = Get-DeviceManagement_DeviceCompliancePolicies -DeviceCompliancePolicyId $deviceCompliancePolicyId
+                $deviceCompliancePolicyObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies/$deviceCompliancePolicyId" | Get-MGGraphAllPages
             }
             else {
-                $deviceCompliancePolicyObject = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceCompliancePolicy.BaseName)"
+                $deviceCompliancePolicyObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies" | Get-MGGraphAllPages | Where-Object displayName -eq $deviceCompliancePolicyName
                 if (-not ($deviceCompliancePolicyObject)) {
                     Write-Verbose "Error retrieving Intune Compliance Policy for $($deviceCompliancePolicy.FullName). Skipping assignment restore" -Verbose
                     continue
@@ -80,7 +80,7 @@ function Invoke-IntuneRestoreDeviceCompliancePolicyAssignment {
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicyObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicyObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Compliance Policy Assignments"

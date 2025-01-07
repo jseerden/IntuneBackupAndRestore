@@ -13,9 +13,9 @@ function Start-IntuneRestoreAssignments() {
     Start-IntuneRestoreAssignments -Path C:\temp -RestoreById $false
     
     .NOTES
-    Requires the MSGraphFunctions PowerShell Module
+    Requires the MSGraph SDK PowerShell Module
 
-    Connect to MSGraph first, using the 'Connect-Graph' cmdlet.
+    Connect to MSGraph first, using the 'Connect-MgGraph' cmdlet.
 
     Set $RestoreById to $true, if the Configuration itself was not restored from backup. Set $RestoreById to $false if the configurations have been re-created (new unique ID's).
     #>
@@ -36,10 +36,31 @@ function Start-IntuneRestoreAssignments() {
         "Path"   = $Path
     }
 
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "EntitlementManagement.ReadWrite.All, DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }else{
+        Write-Host "MS-Graph already connected, checking scopes"
+        $scopes = Get-MgContext | Select-Object -ExpandProperty Scopes
+        $IncorrectScopes = $false
+        if ($scopes -notcontains "DeviceManagementApps.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementConfiguration.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementServiceConfig.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($scopes -notcontains "DeviceManagementManagedDevices.ReadWrite.All") {$IncorrectScopes = $true}
+        if ($IncorrectScopes) {
+            Write-Host "Incorrect scopes, please sign in again"
+            connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All"
+        }else{
+            Write-Host "MS-Graph scopes are correct"     
+        }
+  
+    }
+
     Invoke-IntuneRestoreConfigurationPolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreClientAppAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceManagementScriptAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreGroupPolicyConfigurationAssignment -Path $path -RestoreById $restoreById
+	Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path
 }

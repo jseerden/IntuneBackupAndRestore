@@ -30,15 +30,16 @@ function Invoke-IntuneRestoreClientAppAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all policies with assignments
-    $clientApps = Get-ChildItem -Path "$Path\Client Apps\Assignments"
-    foreach ($clientApp in $clientApps) {
+    $clientAppsAssignmentItems = Get-ChildItem -Path "$Path\Client Apps\Assignments" -File -ErrorAction SilentlyContinue
+    $clientApps = Get-ChildItem -Path "$Path\Client Apps" -File -ErrorAction SilentlyContinue
+	
+    foreach ($clientApp in $clientAppsAssignmentItems) {
         $clientAppAssignments = Get-Content -LiteralPath $clientApp.FullName | ConvertFrom-Json
         $clientAppId = ($clientApp.BaseName -split " - ")[0]
         $clientAppName = ($clientApp.BaseName -split " - ",2)[-1]
@@ -72,10 +73,10 @@ function Invoke-IntuneRestoreClientAppAssignment {
         # Get the Client App we are restoring the assignments for
         try {
             if ($restoreById) {
-                $clientAppObject = Get-DeviceAppManagement_MobileApps -mobileAppId $clientAppId
+                $clientAppObject = Invoke-MgGraphRequest -Uri "$apiversion/deviceAppManagement/mobileApps/$clientAppId" 
             }
             else {
-                $clientAppObject = Get-DeviceAppManagement_MobileApps | Get-MSGraphAllPages | Where-Object { $_.displayName -eq "$($clientAppName)" -and $_.'@odata.type' -ne "#microsoft.graph.managedAndroidStoreApp" -and $_.'@odata.type' -ne "#microsoft.graph.managedIOSStoreApp" }
+                $clientAppObject = Invoke-MgGraphRequest -Uri "$apiversion/deviceAppManagement/mobileApps/" | Get-MgGraphAllPages | Where-Object { $_.displayName -eq "$($clientAppName)" -and $_.'@odata.type' -ne "#microsoft.graph.managedAndroidStoreApp" -and $_.'@odata.type' -ne "#microsoft.graph.managedIOSStoreApp" }
                 if (-not ($clientAppObject)) {
                     Write-Warning "Error retrieving Intune Client App for $($clientApp.FullName). Skipping assignment restore"
                     continue
@@ -90,7 +91,7 @@ function Invoke-IntuneRestoreClientAppAssignment {
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/mobileApps/$($clientAppObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/mobileApps/$($clientAppObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Client App Assignments"

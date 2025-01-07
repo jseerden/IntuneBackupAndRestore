@@ -23,32 +23,34 @@ function Invoke-IntuneBackupDeviceCompliancePolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+     #Connect to MS-Graph if required
+     if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All" 
     }
 
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Compliance Policies\Assignments")) {
-        $null = New-Item -Path "$Path\Device Compliance Policies\Assignments" -ItemType Directory
-    }
+    # Get all Device Compliance Policies
+    $deviceCompliancePolicies = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies" | Get-MGGraphAllPages
 
-    # Get all assignments from all policies
-    $deviceCompliancePolicies = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages
+	if ($deviceCompliancePolicies.value -ne "") {
 
-    foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $assignments = Get-DeviceManagement_DeviceCompliancePolicies_Assignments -DeviceCompliancePolicyId $deviceCompliancePolicy.id 
-        if ($assignments) {
-            $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Compliance Policies\Assignments\$fileName.json"
-
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Device Compliance Policy Assignments"
-                "Name"   = $deviceCompliancePolicy.displayName
-                "Path"   = "Device Compliance Policies\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Compliance Policies\Assignments")) {
+			$null = New-Item -Path "$Path\Device Compliance Policies\Assignments" -ItemType Directory
+		}
+	
+		foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
+		$assignments = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies/$($deviceCompliancePolicy.id)/assignments" | Get-MGGraphAllPages
+			if ($assignments) {
+				$fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Compliance Policies\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Device Compliance Policy Assignments"
+					"Name"   = $deviceCompliancePolicy.displayName
+					"Path"   = "Device Compliance Policies\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

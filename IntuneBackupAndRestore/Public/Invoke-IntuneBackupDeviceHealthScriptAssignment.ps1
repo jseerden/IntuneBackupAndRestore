@@ -1,18 +1,18 @@
 ﻿function Invoke-IntuneBackupDeviceHealthScriptAssignment {
     <#
     .SYNOPSIS
-    Backup Intune Health Script (remediation Scripts) Assignments
-
+    Backup Intune Device Health Script Assignments
+    
     .DESCRIPTION
-    Backup Intune Health Script (remediation Scripts) Assignments as JSON files per Health Script Policy to the specified Path.
-
+    Backup Intune Device Health Script Assignments as JSON files per Device Health Script to the specified Path.
+    
     .PARAMETER Path
     Path to store backup files
-
+    
     .EXAMPLE
     Invoke-IntuneBackupDeviceHealthScriptAssignment -Path "C:\temp"
     #>
-
+    
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -23,26 +23,35 @@
         [string]$ApiVersion = "Beta"
     )
 
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {
-        $null = New-Item -Path "$Path\Device Health Scripts\Assignments" -ItemType Directory
+     #Connect to MS-Graph if required
+     if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
-    $healthScripts = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/deviceHealthScripts" | Select-Object -ExpandProperty Value
+    # Get all assignments from all policies
+    $healthScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" | Get-MGGraphAllPages
 
-    foreach ($healthScript in $healthScripts) {
-        $assignments = Invoke-MSGraphRequest -Url "https://graph.microsoft.com/$ApiVersion/deviceManagement/deviceHealthScripts/$($healthScript.id)/assignments"
+	if ($healthScripts.value -ne "") {
 
-        if ($assignments) {
-            $fileName = ($healthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-            $assignments | ConvertTo-Json | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
-
-            [PSCustomObject]@{
-                "Action" = "Backup"
-                "Type"   = "Device Health Scripts Assignments"
-                "Name"   = $healthScript.displayName
-                "Path"   = "Device Health Scripts\Assignments\$fileName.json"
-            }
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {
+			$null = New-Item -Path "$Path\Device Health Scripts\Assignments" -ItemType Directory
+		}
+	
+		foreach ($deviceHealthScript in $deviceHealthScripts) {
+			$assignments = Invoke-MgGraphRequest -Uri "deviceManagement/deviceHealthScripts/$($deviceHealthScript.id)/assignments" | Get-MGGraphAllPages
+			
+			if ($assignments) {
+				$fileName = ($deviceHealthScript.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+				$assignments | ConvertTo-Json -depth 100 | Out-File -LiteralPath "$path\Device Health Scripts\Assignments\$fileName.json"
+	
+				[PSCustomObject]@{
+					"Action" = "Backup"
+					"Type"   = "Device Health Scripts Assignments"
+					"Name"   = $deviceHealthScript.displayName
+					"Path"   = "Device Health Scripts\Assignments\$fileName.json"
+				}
+			}
+		}
+	}
 }

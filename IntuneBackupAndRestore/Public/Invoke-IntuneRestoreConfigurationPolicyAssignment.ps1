@@ -18,7 +18,6 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
     .EXAMPLE
     Invoke-IntuneBackupConfigurationPolicyAssignment -Path "C:\temp" -RestoreById $true
     #>
-    
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -32,18 +31,19 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all policies with assignments
-    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog\Assignments"
+    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyAssignments = Get-Content -LiteralPath $configurationPolicy.FullName | ConvertFrom-Json
         $configurationPolicyId = ($configurationPolicyAssignments[0]).id.Split("_")[0]
-
+        $configurationPolicyName = $configurationPolicy.BaseName
+		
         # Create the base requestBody
         $requestBody = @{
             assignments = @()
@@ -62,10 +62,10 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
         # Get the Configuration Policy we are restoring the assignments for
         try {
             if ($restoreById) {
-                $configurationPolicyObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies/$configurationPolicyId"
+                $configurationPolicyObject = Invoke-MgGraphRequest -method GET -Uri "$apiVersion/deviceManagement/configurationPolicies/$configurationPolicyId"
             }
             else {
-                $configurationPolicyObject = Invoke-MSGraphRequest -HttpMethod GET -Url "deviceManagement/configurationPolicies" | Get-MSGraphAllPages | Where-Object name -eq "$($configurationPolicy.BaseName)"
+                $configurationPolicyObject =  Invoke-MgGraphRequest -method GET -Uri "$apiVersion/deviceManagement/configurationPolicies" | Get-MgGraphAllPages | Where-Object name -eq $configurationPolicyName 
                 if (-not ($configurationPolicyObject)) {
                     Write-Verbose "Error retrieving Intune Session Catalog for $($configurationPolicy.FullName). Skipping assignment restore" -Verbose
                     continue
@@ -80,7 +80,7 @@ function Invoke-IntuneRestoreConfigurationPolicyAssignment {
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/configurationPolicies/$($configurationPolicyObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -method POST -body $requestBody.toString() -Uri "$apiVersion/deviceManagement/configurationPolicies/$($configurationPolicyObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Settings Catalog Assignments"

@@ -23,25 +23,24 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+     #Connect to MS-Graph if required
+     if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All" 
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File
+    $deviceCompliancePolicies = Get-ChildItem -Path "$Path\Device Compliance Policies" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName -Raw
-        $deviceCompliancePolicyDisplayName = ($deviceCompliancePolicyContent | ConvertFrom-Json).displayName
+        $deviceCompliancePolicyContent = Get-Content -LiteralPath $deviceCompliancePolicy.FullName  -Raw | ConvertFrom-Json
+
+        $deviceCompliancePolicyDisplayName = $deviceCompliancePolicyContent.displayName
 
         # Remove properties that are not available for creating a new configuration
-        $requestBodyObject = $deviceCompliancePolicyContent | ConvertFrom-Json
-        $requestBody = $requestBodyObject | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime | ConvertTo-Json -Depth 100
+        $requestBody = $deviceCompliancePolicyContent | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime 
 
         # If missing, adds a default required block scheduled action to the compliance policy request body, as this value is not returned when retrieving compliance policies.
-        $requestBodyObject = $requestBody | ConvertFrom-Json
-        if (-not ($requestBodyObject.scheduledActionsForRule)) {
+        if (-not ($requestBody.scheduledActionsForRule)) {
             $scheduledActionsForRule = @(
                 @{
                     ruleName = "PasswordRequired"
@@ -54,15 +53,14 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
                     )
                 }
             )
-            $requestBodyObject | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
-            
-            # Update the request body reflecting the changes
-            $requestBody = $requestBodyObject | ConvertTo-Json -Depth 100
+            $requestBody | Add-Member -NotePropertyName scheduledActionsForRule -NotePropertyValue $scheduledActionsForRule
         }
+        
+        $requestBodyJson = $requestBody | ConvertTo-Json -Depth 100
 
         # Restore the Device Compliance Policy
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -body $requestBodyJson.toString() -Uri "beta/deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Compliance Policy"

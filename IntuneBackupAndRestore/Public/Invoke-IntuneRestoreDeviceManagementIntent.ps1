@@ -21,25 +21,46 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
         [Parameter(Mandatory = $false)]
         [ValidateSet("v1.0", "Beta")]
         [string]$ApiVersion = "Beta"
+
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all device management intents
-    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File
+    $deviceManagementIntents = Get-ChildItem -Path "$Path\Device Management Intents" -Recurse -File -ErrorAction SilentlyContinue
+
+    #Used to exclude Onboarding/Offboarding blob settings if AutoPopulateOnboardingBlob is set to $true
+    $excludedEDRDefinitions = @(
+        "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionBlobType"
+        "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionOffboardingBlob"
+        "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionOnboardingBlob"
+        "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionOnboardingFilename"
+        "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionOffboardingFilename"
+    )
+
     foreach ($deviceManagementIntent in $deviceManagementIntents) {
-        $deviceManagementIntentContent = Get-Content -LiteralPath $deviceManagementIntent.FullName -Raw
-        $deviceManagementIntentDisplayName = ($deviceManagementIntentContent | ConvertFrom-Json).displayName
+        if($deviceManagementIntent.DirectoryName -match "Assignments"){continue}
+        $deviceManagementIntentContent = Get-Content -LiteralPath $deviceManagementIntent.FullName | ConvertFrom-Json
         $templateId = $deviceManagementIntent.Name.Split("_")[0]
         $templateDisplayName = ($deviceManagementIntent).DirectoryName.Split('\')[-1]
 
+        $deviceManagementIntentDisplayName = $deviceManagementIntentContent.displayName
+
+        #When importing an EDR policy, if AutoPopulateOnboardingBlob is set to true, the onboarding blob policies need to be set to null or removed.
+        If ($templateId -eq "e44c2ca3-2f9a-400a-a113-6cc88efd773d") {
+            $AutoPopulateOnboardingBlob = ($deviceManagementIntentContent.settingsDelta | ? { $_.definitionId -eq "deviceConfiguration--windowsDefenderAdvancedThreatProtectionConfiguration_advancedThreatProtectionAutoPopulateOnboardingBlob" }).value
+            If ($AutoPopulateOnboardingBlob) {
+                $deviceManagementIntentContent.settingsDelta = $deviceManagementIntentContent.settingsDelta | ? { $excludedEDRDefinitions -notcontains $_.definitionId }
+            }
+        }
+        
+        $deviceManagementIntentJson = $($deviceManagementIntentContent | convertto-json -Depth 100)
         # Restore the device management intent
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Url "deviceManagement/templates/$($templateId)/createInstance" -Content $deviceManagementIntentContent.toString() -ErrorAction Stop
+            New-MgBetaDeviceManagementTemplateInstance -DeviceManagementTemplateId $templateId -BodyParameter $deviceManagementIntentJson
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Intent"

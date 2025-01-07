@@ -23,29 +23,42 @@ function Invoke-IntuneBackupAppProtectionPolicy {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\App Protection Policies")) {
-        $null = New-Item -Path "$Path\App Protection Policies" -ItemType Directory
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all App Protection Policies
-    $appProtectionPolicies = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages
+    $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
-    foreach ($appProtectionPolicy in $appProtectionPolicies) {
-        $fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+	if ($appProtectionPolicies.value -ne "") {
 
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "App Protection Policy"
-            "Name"   = $appProtectionPolicy.displayName
-            "Path"   = "App Protection Policies\$fileName.json"
-        }
-    }
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\App Protection Policies")) {
+			$null = New-Item -Path "$Path\App Protection Policies" -ItemType Directory
+		}
+	
+		foreach ($appProtectionPolicy in $appProtectionPolicies) {
+	
+			if (($appProtectionPolicy.AppGroupType -eq "selectedPublicApps") -and ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection')) {
+				$uri = "$ApiVersion/deviceAppManagement/androidManagedAppProtections('$($appProtectionPolicy.id)')"+'?$expand=apps'
+				$appProtectionPolicy.apps = (Invoke-MgGraphRequest -method get -Uri $uri).apps
+			}
+	
+			if (($appProtectionPolicy.AppGroupType -eq "selectedPublicApps") -and ($appProtectionPolicy.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection')) {
+				$uri = "$ApiVersion/deviceAppManagement/iosManagedAppProtections('$($appProtectionPolicy.id)')"+'?$expand=apps'
+				$appProtectionPolicy.add("apps",(Invoke-MgGraphRequest -method get -Uri $uri).apps) 
+			}
+	
+			$fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+			$appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
+	
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "App Protection Policy"
+				"Name"   = $appProtectionPolicy.displayName
+				"Path"   = "App Protection Policies\$fileName.json"
+			}
+		}
+	}
 }

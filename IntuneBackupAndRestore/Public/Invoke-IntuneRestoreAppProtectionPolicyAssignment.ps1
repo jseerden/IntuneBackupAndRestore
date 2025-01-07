@@ -16,7 +16,7 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
     .EXAMPLE
     Invoke-IntuneRestoreAppProtectionPolicyAssignment -Path "C:\temp" -RestoreById $true
     #>
-    
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -30,19 +30,18 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if ($null -eq (Get-MgContext)) {
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all policies with assignments
-    $appProtectionPolicies = Get-ChildItem -Path "$Path\App Protection Policies\Assignments"
+    $appProtectionPolicies = Get-ChildItem -Path "$Path\App Protection Policies\Assignments" -File -ErrorAction SilentlyContinue
     foreach ($appProtectionPolicy in $appProtectionPolicies) {
         $appProtectionPolicyAssignments = Get-Content -LiteralPath $appProtectionPolicy.FullName | ConvertFrom-Json
         $appProtectionPolicyId = ($appProtectionPolicy.BaseName -split " - ")[0]
-        $appProtectionPolicyName = ($appProtectionPolicy.BaseName -split " - ",2)[-1]
-
+        $appProtectionPolicyName = (($appProtectionPolicy.BaseName -split " - ", 2)[-1])
+        
         # Create the base requestBody
         $requestBody = @{
             assignments = @()
@@ -51,7 +50,7 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
         # Add assignments to restore to the request body
         foreach ($appProtectionPolicyAssignment in $appProtectionPolicyAssignments.Value) {
             $requestBody.assignments += @{
-                "target"   = $appProtectionPolicyAssignment.target | Select-Object -Property * -ExcludeProperty deviceAndAppManagementAssignmentFilterId, deviceAndAppManagementAssignmentFilterType
+                "target" = $appProtectionPolicyAssignment.target | Select-Object -Property * -ExcludeProperty deviceAndAppManagementAssignmentFilterId, deviceAndAppManagementAssignmentFilterType
             }
         }
 
@@ -61,10 +60,10 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
         # Get the App Protection Policy we are restoring the assignments for
         try {
             if ($restoreById) {
-                $appProtectionPolicyObject = Get-IntuneAppProtectionPolicy -managedAppPolicyId $appProtectionPolicyId
+                $appProtectionPolicyObject = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies/$appProtectionPolicyId" 
             }
             else {
-                $appProtectionPolicyObject = Get-IntuneAppProtectionPolicy | Get-MSGraphAllPages | Where-Object { $_.displayName -eq $appProtectionPolicyName }
+                $appProtectionPolicyObject = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies/" | Get-MGGraphAllPages | Where-Object { $_.displayName -eq $appProtectionPolicyName }
                 if (-not ($appProtectionPolicyObject)) {
                     Write-Warning "Error retrieving App Protection Policy for $appProtectionPolicyName. Skipping assignment restore"
                     continue
@@ -81,19 +80,19 @@ function Invoke-IntuneRestoreAppProtectionPolicyAssignment {
         try {
             # If Android
             if ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.androidManagedAppProtection') {
-                $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/androidManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
+                $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/androidManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
             }
             # Elseif iOS
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.iosManagedAppProtection') {
-                $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/iosManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
+                $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/iosManagedAppProtections/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
             }
             # Elseif Windows 10 with enrollment
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.mdmWindowsInformationProtectionPolicy') {
-                $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/mdmWindowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
+                $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/mdmWindowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
             }
             # Elseif Windows 10 without Enrollment
             elseif ($appProtectionPolicyObject.'@odata.type' -eq '#microsoft.graph.windowsInformationProtectionPolicy') {
-                $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceAppManagement/windowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
+                $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceAppManagement/windowsInformationProtectionPolicies/$($appProtectionPolicyObject.id)/assign" -ErrorAction Stop
             }
 
             [PSCustomObject]@{

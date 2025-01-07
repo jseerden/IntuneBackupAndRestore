@@ -23,28 +23,27 @@ function Invoke-IntuneRestoreConfigurationPolicy {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all Settings Catalog Policies
-    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog" -File
+    $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog" -File -ErrorAction SilentlyContinue
 
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyContent = Get-Content -LiteralPath $configurationPolicy.FullName -Raw | ConvertFrom-Json
-        
+
         # Remove properties that are not available for creating a new configuration
         $requestBody = $configurationPolicyContent | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, settingCount, creationSource | ConvertTo-Json -Depth 100
 
         # Restore the Settings Catalog Policy
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/configurationPolicies" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/configurationPolicies" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Settings Catalog"
-                "Name"   = $configurationPolicy.FullName
+                "Name"   = $configurationPolicy.BaseName
                 "Path"   = "Settings Catalog\$($configurationPolicy.Name)"
             }
         }

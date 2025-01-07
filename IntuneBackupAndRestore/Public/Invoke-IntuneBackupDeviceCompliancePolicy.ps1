@@ -23,29 +23,31 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
-    }
-
-    # Create folder if not exists
-    if (-not (Test-Path "$Path\Device Compliance Policies")) {
-        $null = New-Item -Path "$Path\Device Compliance Policies" -ItemType Directory
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All" 
     }
 
     # Get all Device Compliance Policies
-    $deviceCompliancePolicies = Get-DeviceManagement_DeviceCompliancePolicies | Get-MSGraphAllPages
-    
-    foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
-        $fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-        $deviceCompliancePolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
+    $deviceCompliancePolicies = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies" | Get-MGGraphAllPages
 
-        [PSCustomObject]@{
-            "Action" = "Backup"
-            "Type"   = "Device Compliance Policy"
-            "Name"   = $deviceCompliancePolicy.displayName
-            "Path"   = "Device Compliance Policies\$fileName.json"
-        }
-    }
+	if ($deviceCompliancePolicies.value -ne "") {
+
+		# Create folder if not exists
+		if (-not (Test-Path "$Path\Device Compliance Policies")) {
+			$null = New-Item -Path "$Path\Device Compliance Policies" -ItemType Directory
+		}
+		
+		foreach ($deviceCompliancePolicy in $deviceCompliancePolicies) {
+			$fileName = ($deviceCompliancePolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+			$deviceCompliancePolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\Device Compliance Policies\$fileName.json"
+	
+			[PSCustomObject]@{
+				"Action" = "Backup"
+				"Type"   = "Device Compliance Policy"
+				"Name"   = $deviceCompliancePolicy.displayName
+				"Path"   = "Device Compliance Policies\$fileName.json"
+			}
+		}
+	}
 }

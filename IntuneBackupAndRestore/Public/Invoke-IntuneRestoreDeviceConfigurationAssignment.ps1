@@ -32,16 +32,17 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         [string]$ApiVersion = "Beta"
     )
 
-    # Set the Microsoft Graph API endpoint
-    if (-not ((Get-MSGraphEnvironment).SchemaVersion -eq $apiVersion)) {
-        Update-MSGraphEnvironment -SchemaVersion $apiVersion -Quiet
-        Connect-MSGraph -ForceNonInteractive -Quiet
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
     }
 
     # Get all policies with assignments
-    $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments"
+    $deviceConfigurations = Get-ChildItem -Path "$Path\Device Configurations\Assignments" -File -ErrorAction SilentlyContinue
+	
     foreach ($deviceConfiguration in $deviceConfigurations) {
         $deviceConfigurationAssignments = Get-Content -LiteralPath $deviceConfiguration.FullName | ConvertFrom-Json
+        $deviceConfigurationName = $deviceConfiguration.BaseName
 
         # Create the base requestBody
         $requestBody = @{
@@ -61,10 +62,10 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         # Get the Device Configuration we are restoring the assignments for
         try {
             if ($restoreById) {
-                $deviceConfigurationObject = Get-DeviceManagement_DeviceConfigurations -DeviceConfigurationId $deviceConfigurationAssignments[0].deviceConfigurationId
-            }
+                $deviceConfigurationObject = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations/$($deviceConfigurationAssignment.sourceid)" | Get-MGGraphAllPages
+            }   
             else {
-                $deviceConfigurationObject = Get-DeviceManagement_DeviceConfigurations | Get-MSGraphAllPages | Where-Object displayName -eq "$($deviceConfiguration.BaseName)"
+                $deviceConfigurationObject = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations" | Get-MGGraphAllPages | Where-Object displayName -eq $deviceConfigurationName
                 if (-not ($deviceConfigurationObject)) {
                     Write-Verbose "Error retrieving Intune Device Configuration for $($deviceConfiguration.FullName). Skipping assignment restore" -Verbose
                     continue
@@ -79,7 +80,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
 
         # Restore the assignments
         try {
-            $null = Invoke-MSGraphRequest -HttpMethod POST -Content $requestBody.toString() -Url "deviceManagement/deviceConfigurations/$($deviceConfigurationObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -body $requestBody.toString() -Uri "$apiVersion/deviceManagement/deviceConfigurations/$($deviceConfigurationObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Configuration Assignments"
