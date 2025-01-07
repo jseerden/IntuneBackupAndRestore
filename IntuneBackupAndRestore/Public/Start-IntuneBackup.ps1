@@ -51,6 +51,8 @@ function Start-IntuneBackup() {
 		Write-Host ""
     }
 
+    Invoke-IntuneBackupAutopilotDeploymentProfile -Path $Path
+    Invoke-IntuneBackupAutopilotDeploymentProfileAssignment -Path $Path
     Invoke-IntuneBackupClientApp -Path $Path
     Invoke-IntuneBackupClientAppAssignment -Path $Path
     Invoke-IntuneBackupConfigurationPolicy -Path $Path
@@ -59,6 +61,8 @@ function Start-IntuneBackup() {
     Invoke-IntuneBackupDeviceCompliancePolicyAssignment -Path $Path
     Invoke-IntuneBackupDeviceConfiguration -Path $Path
     Invoke-IntuneBackupDeviceConfigurationAssignment -Path $Path
+    Invoke-IntuneBackupDeviceHealthScript -Path $Path
+    Invoke-IntuneBackupDeviceHealthScriptAssignment -Path $Path
     Invoke-IntuneBackupDeviceManagementScript -Path $Path
     Invoke-IntuneBackupDeviceManagementScriptAssignment -Path $Path
     Invoke-IntuneBackupGroupPolicyConfiguration -Path $Path

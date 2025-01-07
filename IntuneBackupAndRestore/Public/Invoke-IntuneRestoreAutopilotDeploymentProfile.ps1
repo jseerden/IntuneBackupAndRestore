@@ -23,6 +23,11 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
         [string]$ApiVersion = "Beta"
     )
 
+    #Connect to MS-Graph if required
+    if($null -eq (Get-MgContext)){
+        Connect-MgGraph -Scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+    }
+
     # Get all device health scripts
     $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles" -File -ErrorAction SilentlyContinue
 	
@@ -36,7 +41,7 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
 
         # Restore the Deployment Profile
 		try {
-			$null = Invoke-MgGraphRequest -Method POST -Content $requestBody.toString() -Uri "deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
+			$null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
 			[PSCustomObject]@{
 				"Action" = "Restore"
 				"Type"   = "Autopilot Deployment Profile"

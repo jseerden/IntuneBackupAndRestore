@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2025-01-07
+- Updated to Microsoft.Graph PowerShell Module. Special thanks to @mhu4711
+- Added support for backing up and restoring Autopilot Deployment Profiles.
+- Added support for restoring Proactive Remediations.
+
 ## [3.2.0] - 2021-12-10
 - Added support for backing up Proactive Remediations. Special thanks to @ztrhgf and @Kosipeich
 - Added support for backing up Proactive Remediation Assignments. Special thanks to @ztrhgf and @Kosipeich

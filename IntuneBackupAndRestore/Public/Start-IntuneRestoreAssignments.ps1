@@ -56,11 +56,13 @@ function Start-IntuneRestoreAssignments() {
   
     }
 
+    Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreConfigurationPolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreClientAppAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById
+    Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path -RestoreById $restoreById
     Invoke-IntuneRestoreDeviceManagementScriptAssignment -Path $path -RestoreById $restoreById
     Invoke-IntuneRestoreGroupPolicyConfigurationAssignment -Path $path -RestoreById $restoreById
-	Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path
+	
 }

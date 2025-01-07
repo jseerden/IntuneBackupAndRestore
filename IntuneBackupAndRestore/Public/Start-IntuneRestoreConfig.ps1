@@ -51,12 +51,13 @@ function Start-IntuneRestoreConfig() {
   
     }
 
+    Invoke-IntuneRestoreAutopilotDeploymentProfile -Path $Path
     Invoke-IntuneRestoreConfigurationPolicy -Path $Path
     Invoke-IntuneRestoreDeviceCompliancePolicy -Path $Path
     Invoke-IntuneRestoreDeviceConfiguration -Path $Path
+    Invoke-IntuneRestoreDeviceHealthScript -Path $Path
     Invoke-IntuneRestoreDeviceManagementScript -Path $Path
     Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path
     Invoke-IntuneRestoreDeviceManagementIntent -Path $Path
     Invoke-IntuneRestoreAppProtectionPolicy -Path $Path
-	Invoke-IntuneRestoreDeviceHealthScript -Path $Path
 }

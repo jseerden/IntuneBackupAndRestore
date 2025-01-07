@@ -3,10 +3,12 @@
 ![PowerShell Gallery](https://img.shields.io/powershellgallery/v/IntuneBackupAndRestore.svg?label=PSGallery%20Version&logo=PowerShell&style=flat-square)
 ![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/IntuneBackupAndRestore.svg?label=PSGallery%20Downloads&logo=PowerShell&style=flat-square)
 
-
 This PowerShell Module queries Microsoft Graph, and allows for cross-tenant Backup & Restore actions of your Intune Configuration.
 
 Intune Configuration is backed up as (json) files in a given directory.
+
+## Credits
+Thanks https://github.com/mhu4711 for updating this PowerShell module to the Microsoft.Graph PowerShell module.
 
 ## Installing IntuneBackupAndRestore
 
@@ -33,6 +35,8 @@ Update-Module -Name IntuneBackupAndRestore
 - Administrative Template Assignments
 - App Protection Policies
 - App Protection Policy Assignments
+- Autopilot Deployment Profiles
+- Autopilot Deployment Profile Assignments
 - Client Apps
 - Client App Assignments
 - Device Compliance Policies
@@ -65,6 +69,8 @@ Update-Module -Name IntuneBackupAndRestore
 - Administrative Template Assignments
 - App Protection Policies
 - App Protection Policy Assignments
+- Autopilot Deployment Profiles
+- Autopilot Deployment Profile Assignments
 - Client App Assignments
 - Device Compliance Policies
 - Device Compliance Policy Assignments
@@ -72,6 +78,8 @@ Update-Module -Name IntuneBackupAndRestore
 - Device Configuration Assignments
 - Device Management Scripts (Device Configuration -> PowerShell Scripts)
 - Device Management Script Assignments
+- Proactive Remediations
+- Proactive Remediation Assignments
 - Settings Catalog Policies
 - Settings Catalog Policy Assignments
 - Software Update Rings
