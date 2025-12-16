@@ -60,4 +60,5 @@ function Start-IntuneRestoreConfig() {
     Invoke-IntuneRestoreGroupPolicyConfiguration -Path $Path
     Invoke-IntuneRestoreDeviceManagementIntent -Path $Path
     Invoke-IntuneRestoreAppProtectionPolicy -Path $Path
+    Invoke-IntuneRestoreClientApps -Path $Path
 }
