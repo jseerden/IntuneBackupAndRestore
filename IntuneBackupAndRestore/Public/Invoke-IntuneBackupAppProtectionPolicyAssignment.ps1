@@ -30,7 +30,7 @@ function Invoke-IntuneBackupAppProtectionPolicyAssignment {
 
     $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
-	if ($appProtectionPolicies.value -ne "") {
+	if ($appProtectionPolicies -and $appProtectionPolicies.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\App Protection Policies\Assignments")) {

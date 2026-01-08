@@ -32,7 +32,7 @@ function Invoke-IntuneBackupClientApp {
     $filter = "microsoft.graph.managedApp/appAvailability eq null or microsoft.graph.managedApp/appAvailability eq 'lineOfBusiness' or isAssigned eq true"
     $clientApps = Invoke-MgRestMethod -Uri "$apiversion/deviceAppManagement/mobileApps?filter=$filter" | Get-MgGraphAllPages
 
-	if ($clientApps.value -ne "") {
+	if ($clientApps -and $clientApps.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Client Apps")) {

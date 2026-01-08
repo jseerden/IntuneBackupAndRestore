@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2025-12-05
+- Fixed `Invoke-IntuneBackupPolicySet` to handle API limitation where $expand is not supported on collection queries. Now queries each policy set individually with expand.
+- Fixed `Invoke-IntuneRestoreDeviceEnrollmentConfiguration` to use Beta API endpoint (required by Microsoft Graph).
+- Fixed `Invoke-IntuneRestoreDeviceEnrollmentConfiguration` priority conflict handling with automatic priority increment.
+- Fixed `Invoke-IntuneRestoreDeviceEnrollmentConfiguration` to correctly include `deviceEnrollmentConfigurationType` property.
+- Fixed `Invoke-IntuneRestoreDeviceEnrollmentConfiguration` to add [int] casting for priority values to prevent type conversion errors.
+- Fixed `Invoke-IntuneRestoreNotificationTemplate` to use two-step process: create template first, then add localized messages separately.
+- Fixed `Invoke-IntuneRestoreNotificationTemplate` to remove `defaultLocale` and `description` properties during creation (causes BadRequest errors).
+- Fixed `Invoke-IntuneRestoreConditionalAccessPolicy` and `Invoke-IntuneRestoreNamedLocation` to use Beta API and require Policy.ReadWrite.ConditionalAccess scope.
+- Fixed `Invoke-IntuneBackupConfigurationPolicyAssignment` to use pagination so more than 25 assignments are returned
+- Fixed scope validation in `Start-IntuneBackup` and `Start-IntuneRestoreConfig` to include all 8 required scopes including Policy.ReadWrite.ConditionalAccess.
+- Added comprehensive verbose logging throughout restore functions for debugging.
+- Updated `Start-IntuneBackup` scope validation from 4 scopes to 8 scopes (added DeviceManagementScripts, Policy.Read.All, Policy.ReadWrite.ConditionalAccess).
+- Updated `Start-IntuneRestoreConfig` scope validation to match backup requirements.
+- Improved error handling to continue restore operations even when individual policy types fail.
+
+## [5.0.0] - 2025-12-01
+- Added function `Invoke-IntuneBackupAssignmentFilter`.
+- Added function `Invoke-IntuneRestoreAssignmentFilter`.
+- Added function `Invoke-IntuneBackupRoleScopeTag`.
+- Added function `Invoke-IntuneRestoreRoleScopeTag`.
+- Added function `Invoke-IntuneBackupDeviceEnrollmentConfiguration`.
+- Added function `Invoke-IntuneRestoreDeviceEnrollmentConfiguration`.
+- Added function `Invoke-IntuneBackupNamedLocation`.
+- Added function `Invoke-IntuneRestoreNamedLocation`.
+- Added function `Invoke-IntuneBackupConditionalAccessPolicy`.
+- Added function `Invoke-IntuneRestoreConditionalAccessPolicy`.
+- Added function `Invoke-IntuneBackupWindowsFeatureUpdateProfile`.
+- Added function `Invoke-IntuneRestoreWindowsFeatureUpdateProfile`.
+- Added function `Invoke-IntuneBackupWindowsQualityUpdateProfile`.
+- Added function `Invoke-IntuneRestoreWindowsQualityUpdateProfile`.
+- Added function `Invoke-IntuneBackupWindowsDriverUpdateProfile`.
+- Added function `Invoke-IntuneRestoreWindowsDriverUpdateProfile`.
+- Added function `Invoke-IntuneBackupMobileAppConfiguration`.
+- Added function `Invoke-IntuneRestoreMobileAppConfiguration`.
+- Added function `Invoke-IntuneBackupTargetedManagedAppConfiguration`.
+- Added function `Invoke-IntuneRestoreTargetedManagedAppConfiguration`.
+- Added function `Invoke-IntuneBackupNotificationTemplate`.
+- Added function `Invoke-IntuneRestoreNotificationTemplate`.
+- Added function `Invoke-IntuneBackupIntuneBrandingProfile`.
+- Added function `Invoke-IntuneRestoreIntuneBrandingProfile`.
+- Added function `Invoke-IntuneBackupTermsAndConditions`.
+- Added function `Invoke-IntuneRestoreTermsAndConditions`.
+- Added function `Invoke-IntuneBackupRoleDefinition`.
+- Added function `Invoke-IntuneRestoreRoleDefinition`.
+- Added function `Invoke-IntuneBackupPolicySet`.
+- Added function `Invoke-IntuneRestorePolicySet`.
+- Added function `Invoke-IntuneBackupDeviceManagementIntentAssignment`.
+- Embedded all new backup functions in the `Start-IntuneBackup` cmdlet.
+- Embedded all new restore functions in the `Start-IntuneRestoreConfig` cmdlet.
+- Updated `Start-IntuneBackup` and `Start-IntuneRestoreConfig` with try-catch error handling for all function calls.
+- Updated required permissions to include `DeviceManagementRBAC.ReadWrite.All` and `Policy.Read.All`.
+- Fixed issue where Graph API terminating errors would stop the entire backup/restore process.
+- Backup and restore operations now continue even if individual policy types fail due to permissions or API errors.
 ## [4.0.1] - 2025-12-16
 - Updated Microsoft.Graph Required Scopes. Special thanks to @Felix4567 #93
 - Fixed an issue where the Microsoft Graph $apiVersion was missing in a command. Special thanks to @magfrank #82

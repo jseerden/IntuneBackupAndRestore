@@ -34,17 +34,25 @@ function Invoke-IntuneRestoreConfigurationPolicy {
     foreach ($configurationPolicy in $configurationPolicies) {
         $configurationPolicyContent = Get-Content -LiteralPath $configurationPolicy.FullName -Raw | ConvertFrom-Json
 
+        # Get the policy name from JSON content if available, otherwise use filename
+        $configurationPolicyName = if ($configurationPolicyContent.PSObject.Properties.Name -contains 'name') {
+            $configurationPolicyContent.name
+        } else {
+            $configurationPolicy.BaseName
+        }
+
         # Remove properties that are not available for creating a new configuration
         $requestBody = $configurationPolicyContent | Select-Object -Property * -ExcludeProperty id, createdDateTime, lastModifiedDateTime, settingCount, creationSource | ConvertTo-Json -Depth 100
 
         # Restore the Settings Catalog Policy
         try {
-            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/configurationPolicies" -ErrorAction Stop
+            $createdPolicy = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/configurationPolicies" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Settings Catalog"
-                "Name"   = $configurationPolicy.BaseName
+                "Name"   = $configurationPolicyName
                 "Path"   = "Settings Catalog\$($configurationPolicy.Name)"
+                "Id"     = $createdPolicy.id
             }
         }
         catch {

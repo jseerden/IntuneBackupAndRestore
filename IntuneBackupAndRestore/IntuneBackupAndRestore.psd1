@@ -12,7 +12,7 @@
 RootModule = 'IntuneBackupAndRestore.psm1'
 
 # Version number of this module.
-ModuleVersion = '4.0.1'
+ModuleVersion = '5.0.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'Unknown'
 Copyright = '(c) 2025 John Seerden. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell Module that queries Microsoft Graph, and allows for cross-tenant Backup & Restore actions of your Intune Configuration. '
+Description = 'PowerShell Module that queries Microsoft Graph, and allows for cross-tenant Backup & Restore actions of your Intune Configuration including Enrollment, Conditional Access, Updates, App Configurations, and more.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''

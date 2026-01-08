@@ -38,31 +38,39 @@ function Start-IntuneRestoreAssignments() {
 
     #Connect to MS-Graph if required
     if ($null -eq (Get-MgContext)) {
-        connect-mggraph -scopes "EntitlementManagement.ReadWrite.All, DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All, DeviceManagementScripts.ReadWrite.All" 
     }else{
         Write-Host "MS-Graph already connected, checking scopes"
         $scopes = Get-MgContext | Select-Object -ExpandProperty Scopes
-        $IncorrectScopes = $false
-        if ($scopes -notcontains "DeviceManagementApps.ReadWrite.All") {$IncorrectScopes = $true}
-        if ($scopes -notcontains "DeviceManagementConfiguration.ReadWrite.All") {$IncorrectScopes = $true}
-        if ($scopes -notcontains "DeviceManagementServiceConfig.ReadWrite.All") {$IncorrectScopes = $true}
-        if ($scopes -notcontains "DeviceManagementManagedDevices.ReadWrite.All") {$IncorrectScopes = $true}
-        if ($IncorrectScopes) {
-            Write-Host "Incorrect scopes, please sign in again"
-            connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All"
-        }else{
-            Write-Host "MS-Graph scopes are correct"     
+        $requiredScopes = @(
+            "DeviceManagementApps.ReadWrite.All",
+            "DeviceManagementConfiguration.ReadWrite.All",
+            "DeviceManagementServiceConfig.ReadWrite.All",
+            "DeviceManagementManagedDevices.ReadWrite.All"
+        )
+        # Use case-insensitive comparison
+        $missingScopes = $requiredScopes | Where-Object {
+            $requiredScope = $_
+            -not ($scopes | Where-Object { $_ -eq $requiredScope })
         }
-  
+
+        if ($missingScopes) {
+            Write-Error "Missing required permission scopes: $($missingScopes -join ', ')"
+            Write-Error "Please reconnect with the correct permissions using: Connect-MgGraph -Scopes 'DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All'"
+            throw "Insufficient permissions. Restore assignments cannot continue."
+        }else{
+            Write-Host "MS-Graph scopes are correct"
+        }
+
     }
 
-    Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreConfigurationPolicyAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreClientAppAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path -RestoreById $restoreById
-    Invoke-IntuneRestoreDeviceManagementScriptAssignment -Path $path -RestoreById $restoreById
-    Invoke-IntuneRestoreGroupPolicyConfigurationAssignment -Path $path -RestoreById $restoreById
-	
+    Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreConfigurationPolicyAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreClientAppAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreDeviceCompliancePolicyAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreDeviceConfigurationAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreDeviceHealthScriptAssignment -Path $Path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreDeviceManagementScriptAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+    Invoke-IntuneRestoreGroupPolicyConfigurationAssignment -Path $path -RestoreById $restoreById -ErrorAction Continue
+
 }

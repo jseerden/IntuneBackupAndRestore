@@ -31,7 +31,7 @@ function Invoke-IntuneBackupDeviceManagementScriptAssignment {
     # Get all assignments from all policies
     $deviceManagementScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts" | Get-MgGraphAllPages
 
-	if ($deviceManagementScripts.value -ne "") {
+	if ($deviceManagementScripts -and $deviceManagementScripts.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Device Management Scripts\Assignments")) {

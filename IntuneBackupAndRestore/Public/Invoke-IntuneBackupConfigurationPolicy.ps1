@@ -31,7 +31,7 @@ function Invoke-IntuneBackupConfigurationPolicy {
     # Get all Setting Catalogs Policies
     $configurationPolicies = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/configurationPolicies" | Get-MGGraphAllPages
 
-	if ($configurationPolicies.value -ne "") {
+	if ($configurationPolicies -and $configurationPolicies.Count -gt 0) {
 
 	    # Create folder if not exists
 		if (-not (Test-Path "$Path\Settings Catalog")) {

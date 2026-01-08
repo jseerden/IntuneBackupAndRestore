@@ -25,13 +25,13 @@ function Invoke-IntuneBackupDeviceManagementIntent {
 
     #Connect to MS-Graph if required
     if($null -eq (Get-MgContext)){
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
+        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All"
     }
 
     Write-Verbose "Requesting Intents"
     $intents = Get-MgBetaDeviceManagementIntent -all
 
-	if ($intents.value -ne "") {
+	if ($intents -and $intents.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Device Management Intents")) {

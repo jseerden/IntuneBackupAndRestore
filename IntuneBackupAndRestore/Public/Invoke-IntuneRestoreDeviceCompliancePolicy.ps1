@@ -60,12 +60,13 @@ function Invoke-IntuneRestoreDeviceCompliancePolicy {
 
         # Restore the Device Compliance Policy
         try {
-            $null = Invoke-MgGraphRequest -Method POST -body $requestBodyJson.toString() -Uri "beta/deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
+            $createdPolicy = Invoke-MgGraphRequest -Method POST -body $requestBodyJson.toString() -Uri "beta/deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Compliance Policy"
                 "Name"   = $deviceCompliancePolicyDisplayName
                 "Path"   = "Device Compliance Policies\$($deviceCompliancePolicy.Name)"
+                "Id"     = $createdPolicy.id
             }
         }
         catch {

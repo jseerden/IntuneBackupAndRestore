@@ -31,7 +31,7 @@ function Invoke-IntuneBackupDeviceConfigurationAssignment {
     # Get all assignments from all policies
     $deviceConfigurations = Invoke-MgGraphRequest -Uri "$apiVersion/deviceManagement/deviceConfigurations" | Get-MGGraphAllPages
 
-	if ($deviceConfigurations.value -ne "") {
+	if ($deviceConfigurations -and $deviceConfigurations.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Device Configurations\Assignments")) {

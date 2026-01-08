@@ -31,7 +31,7 @@ function Invoke-IntuneBackupDeviceCompliancePolicy {
     # Get all Device Compliance Policies
     $deviceCompliancePolicies = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceCompliancePolicies" | Get-MGGraphAllPages
 
-	if ($deviceCompliancePolicies.value -ne "") {
+	if ($deviceCompliancePolicies -and $deviceCompliancePolicies.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Device Compliance Policies")) {

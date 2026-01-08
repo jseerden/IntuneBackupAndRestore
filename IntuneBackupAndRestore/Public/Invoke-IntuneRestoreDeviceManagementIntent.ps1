@@ -60,12 +60,13 @@ function Invoke-IntuneRestoreDeviceManagementIntent {
         $deviceManagementIntentJson = $($deviceManagementIntentContent | convertto-json -Depth 100)
         # Restore the device management intent
         try {
-            New-MgBetaDeviceManagementTemplateInstance -DeviceManagementTemplateId $templateId -BodyParameter $deviceManagementIntentJson
+            $createdPolicy = New-MgBetaDeviceManagementTemplateInstance -DeviceManagementTemplateId $templateId -BodyParameter $deviceManagementIntentJson
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Intent"
                 "Name"   = $deviceManagementIntentDisplayName
                 "Path"   = "Device Management Intents\$($deviceManagementIntent.Name)"
+                "Id"     = $createdPolicy.Id
             }
         }
         catch {

@@ -31,7 +31,7 @@ function Invoke-IntuneBackupAppProtectionPolicy {
     # Get all App Protection Policies
     $appProtectionPolicies = Invoke-MgGraphRequest -Uri "/$ApiVersion/deviceAppManagement/managedAppPolicies" | Get-MgGraphAllPages
 
-	if ($appProtectionPolicies.value -ne "") {
+	if ($appProtectionPolicies -and $appProtectionPolicies.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\App Protection Policies")) {
@@ -50,6 +50,12 @@ function Invoke-IntuneBackupAppProtectionPolicy {
 				$appProtectionPolicy.add("apps",(Invoke-MgGraphRequest -method get -Uri $uri).apps) 
 			}
 	
+			# Skip if displayName is null or empty
+			if ([string]::IsNullOrEmpty($appProtectionPolicy.displayName)) {
+				Write-Warning "Skipping App Protection Policy with null or empty displayName (ID: $($appProtectionPolicy.id))"
+				continue
+			}
+
 			$fileName = ($appProtectionPolicy.displayName).Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
 			$appProtectionPolicy | ConvertTo-Json -Depth 100 | Out-File -LiteralPath "$path\App Protection Policies\$fileName.json"
 	

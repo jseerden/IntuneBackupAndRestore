@@ -31,7 +31,7 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
 	# Get all Group Policy Configurations
     $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations" | Get-MgGraphAllPages
 
-	if ($groupPolicyConfigurations.value -ne "") {
+	if ($groupPolicyConfigurations -and $groupPolicyConfigurations.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Administrative Templates")) {
@@ -43,6 +43,12 @@ function Invoke-IntuneBackupGroupPolicyConfiguration {
 			$groupPolicyBackupValues = @()
 	
 			foreach ($groupPolicyDefinitionValue in $groupPolicyDefinitionValues) {
+				# Skip if definitionValue ID is null or empty
+				if ([string]::IsNullOrEmpty($groupPolicyDefinitionValue.id)) {
+					Write-Warning "Skipping group policy definition value with null or empty ID in configuration: $($groupPolicyConfiguration.displayName)"
+					continue
+				}
+
 				$groupPolicyDefinition = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
 				$groupPolicyPresentationValues = (Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfiguration.id)/definitionValues/$($groupPolicyDefinitionValue.id)/presentationValues?`$expand=presentation" -OutputType PSObject).Value | Select-Object -Property * -ExcludeProperty lastModifiedDateTime, createdDateTime
 			

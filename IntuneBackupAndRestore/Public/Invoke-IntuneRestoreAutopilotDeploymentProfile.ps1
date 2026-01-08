@@ -41,12 +41,13 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfile {
 
         # Restore the Deployment Profile
 		try {
-			$null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
+			$createdPolicy = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
 			[PSCustomObject]@{
 				"Action" = "Restore"
 				"Type"   = "Autopilot Deployment Profile"
 				"Name"   = $winAutopilotDeploymentProfileDisplayName
 				"Path"   = "Autopilot Deployment Profiles\$($winAutopilotDeploymentProfile.Name)"
+				"Id"     = $createdPolicy.id
 			}
 		}
 		catch {

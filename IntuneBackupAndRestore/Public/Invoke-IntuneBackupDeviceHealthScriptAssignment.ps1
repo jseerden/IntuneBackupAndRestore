@@ -31,7 +31,7 @@
     # Get all assignments from all policies
     $healthScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" | Get-MGGraphAllPages
 
-	if ($healthScripts.value -ne "") {
+	if ($healthScripts -and $healthScripts.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Device Health Scripts\Assignments")) {

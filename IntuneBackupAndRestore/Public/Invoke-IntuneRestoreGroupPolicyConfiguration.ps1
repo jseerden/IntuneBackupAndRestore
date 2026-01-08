@@ -33,8 +33,14 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
 
     foreach ($groupPolicyConfiguration in $groupPolicyConfigurations) {
         $groupPolicyConfigurationContent = Get-Content -LiteralPath $groupPolicyConfiguration.FullName -Raw | ConvertFrom-Json
-        $groupPolicyConfigurationDisplayName = $groupPolicyConfiguration.BaseName
-        
+
+        # Use displayName from JSON content if available, otherwise use file BaseName
+        $groupPolicyConfigurationDisplayName = if ($groupPolicyConfigurationContent.PSObject.Properties.Name -contains 'displayName') {
+            $groupPolicyConfigurationContent.displayName
+        } else {
+            $groupPolicyConfiguration.BaseName
+        }
+
         # Restore the Group Policy Configuration
         try {
             $groupPolicyConfigurationRequestBody = @{
@@ -46,9 +52,20 @@ function Invoke-IntuneRestoreGroupPolicyConfiguration {
                 "Type"   = "Administrative Template"
                 "Name"   = $groupPolicyConfigurationObject.displayName
                 "Path"   = "Administrative Templates\$($groupPolicyConfiguration.Name)"
+                "Id"     = $groupPolicyConfigurationObject.id
             }
 
             foreach ($groupPolicyConfigurationSetting in $groupPolicyConfigurationContent) {
+                # Clean up null values in presentationValues which cause JSON serialization errors
+                if ($groupPolicyConfigurationSetting.presentationValues) {
+                    foreach ($presentationValue in $groupPolicyConfigurationSetting.presentationValues) {
+                        if ($presentationValue.values) {
+                            # Filter out entries where both name and value are null
+                            $presentationValue.values = @($presentationValue.values | Where-Object { $_.name -ne $null -or $_.value -ne $null })
+                        }
+                    }
+                }
+
                 $groupPolicyDefinitionValue = Invoke-MgGraphRequest -Method POST -Uri "$apiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues" -Body ($groupPolicyConfigurationSetting | ConvertTo-Json -Depth 100).toString() -ErrorAction Stop
                 $groupPolicyDefinition = Invoke-MgGraphRequest -Method GET -Uri "$apiVersion/deviceManagement/groupPolicyConfigurations/$($groupPolicyConfigurationObject.id)/definitionValues/$($groupPolicyDefinitionValue.id)/definition"
                 [PSCustomObject]@{

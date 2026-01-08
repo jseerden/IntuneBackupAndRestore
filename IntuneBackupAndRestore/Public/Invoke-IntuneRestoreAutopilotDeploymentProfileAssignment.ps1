@@ -59,10 +59,10 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment {
         # Get the Autopilot Deployment Profile we are restoring the assignments for
         try {
             if ($restoreById) {
-                $winAutopilotDeploymentProfileObject = Invoke-MgGraphRequest -Uri "deviceManagement/windowsAutopilotDeploymentProfiles/$winAutopilotDeploymentProfileId"
+                $winAutopilotDeploymentProfileObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$winAutopilotDeploymentProfileId"
             }
             else {
-                $winAutopilotDeploymentProfileObject = Invoke-MgGraphRequest -Uri "deviceManagement/windowsAutopilotDeploymentProfiles" | Get-MGGraphAllPages | Where-Object displayName -eq "$($winAutopilotDeploymentProfile.BaseName)"
+                $winAutopilotDeploymentProfileObject = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" | Get-MGGraphAllPages | Where-Object displayName -eq "$($winAutopilotDeploymentProfile.BaseName)"
                 if (-not ($winAutopilotDeploymentProfileObject)) {
                     Write-Verbose "Error retrieving Intune Autopilot Deployment Profile for $($winAutopilotDeploymentProfile.FullName). Skipping assignment restore" -Verbose
                     continue
@@ -79,7 +79,7 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment {
         try {
 			# FIXME: look into why POSTing to this Graph API endpoint currently results in error "403 Forbidden - FeatureNotEnabled",
             # although the user account has the required permissions as documented in https://docs.microsoft.com/en-us/graph/api/intune-shared-windowsautopilotdeploymentprofile-assign?view=graph-rest-beta
-            $null = Invoke-MgGraphRequest -Method POST -Content $requestBody.toString() -Uri "deviceManagement/windowsAutopilotDeploymentProfiles/$($winAutopilotDeploymentProfileObject.id)/assign" -ErrorAction Stop
+            $null = Invoke-MgGraphRequest -Method POST -Content $requestBody.toString() -Uri "$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles/$($winAutopilotDeploymentProfileObject.id)/assign" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Autopilot Deployment Profile Assignments"

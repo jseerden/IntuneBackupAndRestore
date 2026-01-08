@@ -44,12 +44,13 @@ function Invoke-IntuneRestoreDeviceManagementScript {
 
         # Restore the device management script
         try {
-            $null = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$apiVersion/deviceManagement/deviceManagementScripts" -ErrorAction Stop
+            $createdPolicy = Invoke-MgGraphRequest -Method POST -Body $requestBody.toString() -Uri "$apiVersion/deviceManagement/deviceManagementScripts" -ErrorAction Stop
             [PSCustomObject]@{
                 "Action" = "Restore"
                 "Type"   = "Device Management Script"
                 "Name"   = $deviceManagementScriptDisplayName
                 "Path"   = "Device Management Scripts\$($deviceManagementScript.Name)"
+                "Id"     = $createdPolicy.id
             }
         }
         catch {

@@ -31,7 +31,7 @@
 	# Get all Autopilot Deployment Profiles
     $winAutopilotDeploymentProfiles = Invoke-MgGraphRequest -Uri "https://graph.microsoft.com/$ApiVersion/deviceManagement/windowsAutopilotDeploymentProfiles" -OutputType PSObject | Select-Object -ExpandProperty Value
 
-	if ($winAutopilotDeploymentProfiles.value -ne "") {
+	if ($winAutopilotDeploymentProfiles -and $winAutopilotDeploymentProfiles.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Autopilot Deployment Profiles")) {

@@ -31,7 +31,7 @@ function Invoke-IntuneBackupGroupPolicyConfigurationAssignment {
     # Get all assignments from all policies
     $groupPolicyConfigurations = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/groupPolicyConfigurations" | Get-MgGraphAllPages
 
-	if ($groupPolicyConfigurations.value -ne "") {
+	if ($groupPolicyConfigurations -and $groupPolicyConfigurations.Count -gt 0) {
 
 		# Create folder if not exists
 		if (-not (Test-Path "$Path\Administrative Templates\Assignments")) {

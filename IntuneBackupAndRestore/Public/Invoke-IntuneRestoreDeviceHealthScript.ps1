@@ -42,12 +42,13 @@ function Invoke-IntuneRestoreDeviceHealthScript {
         # Restore the device health script (excluding Microsoft builtin scripts)
 		if (-not ($requestBodyObject.publisher -eq "Microsoft")) {
 			try {
-				$null = Invoke-MgGraphRequest -Method POST -body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" -ErrorAction Stop
+				$createdPolicy = Invoke-MgGraphRequest -Method POST -body $requestBody.toString() -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" -ErrorAction Stop
 				[PSCustomObject]@{
 					"Action" = "Restore"
 					"Type"   = "Device Health Script"
 					"Name"   = $deviceHealthScriptDisplayName
 					"Path"   = "Device Health Scripts\$($deviceHealthScript.Name)"
+					"Id"     = $createdPolicy.id
 				}
 			}
 			catch {
