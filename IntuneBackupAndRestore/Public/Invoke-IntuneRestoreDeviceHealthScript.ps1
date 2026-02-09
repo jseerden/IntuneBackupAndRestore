@@ -23,10 +23,8 @@ function Invoke-IntuneRestoreDeviceHealthScript {
         [string]$ApiVersion = "Beta"
     )
 
-    #Connect to MS-Graph if required
-    if($null -eq (Get-MgContext)){
-        Connect-MgGraph -Scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
 
     # Get all device health scripts
     $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts" -File -ErrorAction SilentlyContinue

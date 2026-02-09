@@ -32,6 +32,9 @@ function Invoke-IntuneRestoreAutopilotDeploymentProfileAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
+    
     # Get all profiles with assignments
     $winAutopilotDeploymentProfiles = Get-ChildItem -Path "$Path\Autopilot Deployment Profiles\Assignments" -File -ErrorAction SilentlyContinue
 	

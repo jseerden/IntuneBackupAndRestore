@@ -33,10 +33,8 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
 
     )
 
-    #Connect to MS-Graph if required
-    if ($null -eq (Get-MgContext)) {
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
 
     # Get all policies with assignments
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments" -File -ErrorAction SilentlyContinue

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.6] - 2026-02-09
+- Updated manifest file to add Required Microsoft.Graph.Authentication module and ProjectUri.
+- Added 2 new functions: "Assert-GraphConnection" and "Connect-IntuneBackupAndRestore".
+- Added functionality to connect with Application flow using either certificate or secret.
+
 ## [4.0.1] - 2025-12-16
 - Updated Microsoft.Graph Required Scopes. Special thanks to @Felix4567 #93
 - Fixed an issue where the Microsoft Graph $apiVersion was missing in a command. Special thanks to @magfrank #82
