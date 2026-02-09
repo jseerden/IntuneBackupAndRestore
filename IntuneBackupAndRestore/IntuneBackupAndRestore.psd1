@@ -12,7 +12,7 @@
 RootModule = 'IntuneBackupAndRestore.psm1'
 
 # Version number of this module.
-ModuleVersion = '4.0.1'
+ModuleVersion = '4.0.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -51,7 +51,7 @@ Description = 'PowerShell Module that queries Microsoft Graph, and allows for cr
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @(@{ModuleName="MSGraphFunctions", ModuleVersion="2.2.0", Guid="0a3f3df4-64a0-430a-937d-a9b1901349ce"})
+RequiredModules = @(@{ModuleName="Microsoft.Graph.Authentication"})
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -101,7 +101,7 @@ PrivateData = @{
         LicenseUri = 'https://github.com/jseerden/IntuneBackupAndRestore/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/jseerden/IntuneBackupAndRestore'
 
         # A URL to an icon representing this module.
         # IconUri = ''

@@ -32,6 +32,9 @@ function Invoke-IntuneRestoreDeviceHealthScriptAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
+    
     # Get all policies with assignments
     $deviceHealthScripts = Get-ChildItem -Path "$Path\Device Health Scripts\Assignments" -File -ErrorAction SilentlyContinue
 	

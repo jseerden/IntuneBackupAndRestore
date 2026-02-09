@@ -28,6 +28,27 @@ Update-Module -Name IntuneBackupAndRestore
 - Requires [Microsoft.Graph](https://github.com/microsoftgraph/msgraph-sdk-powershell) PowerShell Module (`Install-Module -Name Microsoft.Graph`, `Install-Module Microsoft.Graph.Beta -AllowClobber`)
 - Make sure to import the IntuneBackupAndRestore PowerShell module before using it with the `Import-Module IntuneBackupAndRestore` cmdlet.
 
+## Connection
+
+A new function has been developed to connect before hand, and available to connect with either "Delegated" or "Application" Flow.
+
+### Delegated Connection
+```Powershell
+Connect-IntuneBackupAndRestore
+```
+No parameters are needed, and username and password will be required.
+
+### Application Connection
+```Powershell
+Connect-IntuneBackupAndRestore -TenantID "1234" -ClientID "abcd" -CertificateThumbprint "A1B2C3D4"
+```
+It will connect using an App Registration created in your tenant. The app requires the scopes already granted.
+
+```Powershell
+Connect-IntuneBackupAndRestore -TenantID "1234" -ClientID "abcd" -ClientSecret "AppS3cr3T"
+```
+It will connect using an App Registration created in your tenant. The app requires the scopes already granted.
+
 ## Features
 
 ### Backup actions

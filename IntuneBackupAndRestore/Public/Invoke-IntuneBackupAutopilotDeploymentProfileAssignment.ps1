@@ -23,6 +23,9 @@ function Invoke-IntuneBackupAutopilotDeploymentProfileAssignment {
         [string]$ApiVersion = "Beta"
     )
 
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
+
     # Get all assignments from all policies
     $winAutopilotDeploymentProfiles = Invoke-MgGraphRequest -Uri "$apiversion/deviceManagement/windowsAutopilotDeploymentProfiles" | Get-MGGraphAllPages
 

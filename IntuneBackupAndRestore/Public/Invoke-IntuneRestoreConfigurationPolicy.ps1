@@ -23,10 +23,8 @@ function Invoke-IntuneRestoreConfigurationPolicy {
         [string]$ApiVersion = "Beta"
     )
 
-    #Connect to MS-Graph if required
-    if($null -eq (Get-MgContext)){
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
 
     # Get all Settings Catalog Policies
     $configurationPolicies = Get-ChildItem -Path "$Path\Settings Catalog" -File -ErrorAction SilentlyContinue

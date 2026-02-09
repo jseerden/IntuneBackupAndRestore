@@ -23,10 +23,8 @@ function Invoke-IntuneBackupClientApp {
         [string]$ApiVersion = "Beta"
     )
     
-    #Connect to MS-Graph if required
-    if($null -eq (Get-MgContext)){
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+    #Assert MS-Graph connection
+    Assert-GraphConnection -Cmdlet $PSCmdlet
 
     # Get all Client Apps
     $filter = "microsoft.graph.managedApp/appAvailability eq null or microsoft.graph.managedApp/appAvailability eq 'lineOfBusiness' or isAssigned eq true"
