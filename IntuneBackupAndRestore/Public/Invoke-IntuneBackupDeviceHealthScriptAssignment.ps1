@@ -23,10 +23,14 @@
         [string]$ApiVersion = "Beta"
     )
 
-     #Connect to MS-Graph if required
-     if($null -eq (Get-MgContext)){
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+	#Connect to MS-Graph if required
+    $requiredScopes = @(
+        "DeviceManagementApps.ReadWrite.All"
+        "DeviceManagementConfiguration.ReadWrite.All"
+        "DeviceManagementServiceConfig.ReadWrite.All"
+        "DeviceManagementManagedDevices.ReadWrite.All"
+    )
+    Test-GraphConnection -RequiredScopes $requiredScopes
 
     # Get all assignments from all policies
     $healthScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceHealthScripts" | Get-MGGraphAllPages

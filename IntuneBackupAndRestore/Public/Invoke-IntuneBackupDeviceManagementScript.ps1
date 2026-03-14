@@ -24,9 +24,13 @@ function Invoke-IntuneBackupDeviceManagementScript {
     )
 
     #Connect to MS-Graph if required
-    if($null -eq (Get-MgContext)){
-        connect-mggraph -scopes "DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All" 
-    }
+    $requiredScopes = @(
+        "DeviceManagementApps.ReadWrite.All"
+        "DeviceManagementConfiguration.ReadWrite.All"
+        "DeviceManagementServiceConfig.ReadWrite.All"
+        "DeviceManagementManagedDevices.ReadWrite.All"
+    )
+    Test-GraphConnection -RequiredScopes $requiredScopes
 
     # Get all device management scripts
     $deviceManagementScripts = Invoke-MgGraphRequest -Uri "$ApiVersion/deviceManagement/deviceManagementScripts" | Get-MgGraphAllPages
