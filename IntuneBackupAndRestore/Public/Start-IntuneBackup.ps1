@@ -15,7 +15,7 @@ function Start-IntuneBackup() {
     .NOTES
     Requires the MSGraph SDK PowerShell Module
 
-    Connect to MSGraph first, using the 'Connect-MgGraph' cmdlet and the scopes: 'DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementManagedDevices.ReadWrite.All'.
+    Connect to MSGraph first, using the 'Connect-MgGraph' cmdlet and the scopes: 'DeviceManagementApps.ReadWrite.All, DeviceManagementConfiguration.ReadWrite.All, DeviceManagementServiceConfig.ReadWrite.All, DeviceManagementScripts.ReadWrite.All'.
     #>
 
     [CmdletBinding()]
@@ -33,11 +33,9 @@ function Start-IntuneBackup() {
 
     #Connect to MS-Graph if required
     $requiredScopes = @(
-		"EntitlementManagement.ReadWrite.All"
         "DeviceManagementApps.ReadWrite.All"
         "DeviceManagementConfiguration.ReadWrite.All"
         "DeviceManagementServiceConfig.ReadWrite.All"
-        "DeviceManagementManagedDevices.ReadWrite.All"
         "DeviceManagementScripts.ReadWrite.All"
     )
     Test-GraphConnection -RequiredScopes $requiredScopes -CheckScopes

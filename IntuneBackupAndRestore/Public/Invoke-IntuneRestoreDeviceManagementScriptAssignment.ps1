@@ -38,10 +38,9 @@ function Invoke-IntuneRestoreDeviceManagementScriptAssignment {
         "DeviceManagementApps.ReadWrite.All"
         "DeviceManagementConfiguration.ReadWrite.All"
         "DeviceManagementServiceConfig.ReadWrite.All"
-        "DeviceManagementManagedDevices.ReadWrite.All"
+        "DeviceManagementScripts.ReadWrite.All"
     )
     Test-GraphConnection -RequiredScopes $requiredScopes
-    }
 
     # Get all policies with assignments
     $deviceManagementScripts = Get-ChildItem -Path "$Path\Device Management Scripts\Assignments" -File -ErrorAction SilentlyContinue

@@ -37,7 +37,7 @@ function Invoke-IntuneRestoreDeviceConfigurationAssignment {
         "DeviceManagementApps.ReadWrite.All"
         "DeviceManagementConfiguration.ReadWrite.All"
         "DeviceManagementServiceConfig.ReadWrite.All"
-        "DeviceManagementManagedDevices.ReadWrite.All"
+        "DeviceManagementScripts.ReadWrite.All"
     )
     Test-GraphConnection -RequiredScopes $requiredScopes
 

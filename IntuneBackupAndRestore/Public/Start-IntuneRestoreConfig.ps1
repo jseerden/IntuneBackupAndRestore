@@ -33,11 +33,10 @@ function Start-IntuneRestoreConfig() {
 
     #Connect to MS-Graph if required
     $requiredScopes = @(
-		"EntitlementManagement.ReadWrite.All"
         "DeviceManagementApps.ReadWrite.All"
         "DeviceManagementConfiguration.ReadWrite.All"
         "DeviceManagementServiceConfig.ReadWrite.All"
-        "DeviceManagementManagedDevices.ReadWrite.All"
+        "DeviceManagementScripts.ReadWrite.All"
     )
     Test-GraphConnection -RequiredScopes $requiredScopes -CheckScopes
 
